@@ -65,7 +65,7 @@ BEGIN
 --              <Constant>
 --                <TypeClass>String</TypeClass>
 --                <ObjType>System.String</ObjType>
---                <Value>EXECUTE [DBA].[dbo].[dbasp_policycheck_traceflag] 1117</Value>
+--                <Value>EXECUTE [SqlDeep].[dbo].[dbasp_policycheck_traceflag] 1117</Value>
 --              </Constant>
 --            </Function>
 --            <Constant>
@@ -91,7 +91,7 @@ BEGIN
 --              <Constant>
 --                <TypeClass>String</TypeClass>
 --                <ObjType>System.String</ObjType>
---                <Value>EXECUTE [DBA].[dbo].[dbasp_policycheck_traceflag] 1118</Value>
+--                <Value>EXECUTE [SqlDeep].[dbo].[dbasp_policycheck_traceflag] 1118</Value>
 --              </Constant>
 --            </Function>
 --            <Constant>
@@ -118,7 +118,7 @@ BEGIN
 --            <Constant>
 --              <TypeClass>String</TypeClass>
 --              <ObjType>System.String</ObjType>
---              <Value>EXECUTE [DBA].[dbo].[dbasp_policycheck_traceflag] 2371</Value>
+--              <Value>EXECUTE [SqlDeep].[dbo].[dbasp_policycheck_traceflag] 2371</Value>
 --            </Constant>
 --          </Function>
 --          <Constant>
@@ -145,7 +145,7 @@ BEGIN
 --          <Constant>
 --            <TypeClass>String</TypeClass>
 --            <ObjType>System.String</ObjType>
---            <Value>EXECUTE [DBA].[dbo].[dbasp_policycheck_traceflag] 2549</Value>
+--            <Value>EXECUTE [SqlDeep].[dbo].[dbasp_policycheck_traceflag] 2549</Value>
 --          </Constant>
 --        </Function>
 --        <Constant>
@@ -172,7 +172,7 @@ BEGIN
 --        <Constant>
 --          <TypeClass>String</TypeClass>
 --          <ObjType>System.String</ObjType>
---          <Value>EXECUTE [DBA].[dbo].[dbasp_policycheck_traceflag] 2562</Value>
+--          <Value>EXECUTE [SqlDeep].[dbo].[dbasp_policycheck_traceflag] 2562</Value>
 --        </Constant>
 --      </Function>
 --      <Constant>
@@ -199,7 +199,7 @@ BEGIN
 --      <Constant>
 --        <TypeClass>String</TypeClass>
 --        <ObjType>System.String</ObjType>
---        <Value>EXECUTE [DBA].[dbo].[dbasp_policycheck_traceflag] 4199</Value>
+--        <Value>EXECUTE [SqlDeep].[dbo].[dbasp_policycheck_traceflag] 4199</Value>
 --      </Constant>
 --    </Function>
 --    <Constant>

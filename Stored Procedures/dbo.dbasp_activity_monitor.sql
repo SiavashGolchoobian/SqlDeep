@@ -36,9 +36,9 @@ BEGIN
 	SET @myCurrentTime=GETDATE()
 
 	-------------------------Create Table if not exists
-	IF NOT EXISTS (SELECT 1 FROM DBA.[INFORMATION_SCHEMA].[TABLES] WHERE [TABLE_NAME]='ActivityLogHistory')
+	IF NOT EXISTS (SELECT 1 FROM [INFORMATION_SCHEMA].[TABLES] WHERE [TABLE_NAME]='ActivityLogHistory')
 	BEGIN
-		CREATE TABLE [DBA].[trace].[ActivityLogHistory](
+		CREATE TABLE [trace].[ActivityLogHistory](
 		[RecordId] BIGINT IDENTITY NOT NULL PRIMARY KEY,
 		[session_id] [SMALLINT] NULL,
 		[RequestStartTime] [DATETIME] NOT NULL,
@@ -85,13 +85,13 @@ BEGIN
 		[client_net_address NVARCHAR(50) NULL,
 		[LogTime] [DATETIME] NULL DEFAULT (GETDATE())
 		) ON [Data_OLTP] TEXTIMAGE_ON [Data_OLTP]   --[PRIMARY] TEXTIMAGE_ON [PRIMARY]
-		CREATE NONCLUSTERED INDEX NCIX_RequestStartTime ON [DBA].[trace].[ActivityLogHistory] ([RequestStartTime]) WITH (PAD_INDEX=ON,FILLFACTOR=90,SORT_IN_TEMPDB=ON,DATA_COMPRESSION=PAGE) ON [Index_All]
+		CREATE NONCLUSTERED INDEX NCIX_RequestStartTime ON [trace].[ActivityLogHistory] ([RequestStartTime]) WITH (PAD_INDEX=ON,FILLFACTOR=90,SORT_IN_TEMPDB=ON,DATA_COMPRESSION=PAGE) ON [Index_All]
 	END
 
 	-------------------------Fill monitoring table
 	IF @mySqlVersion >= @mySqlServer2014SP2Version AND @mySqlBuildVersion >= @mySqlServer2014SP2BuildVersion
 	BEGIN	--For SQL Servers Equal and Above 2014 SP2
-		INSERT INTO [DBA].[trace].[ActivityLogHistory]
+		INSERT INTO [trace].[ActivityLogHistory]
 			([session_id],
 			 [RequestStartTime],
 			 [RequestStatus],
@@ -215,7 +215,7 @@ BEGIN
 	END
 	ELSE
 	BEGIN	--For SQL Servers Below 2014 SP2
-		INSERT INTO [DBA].[trace].[ActivityLogHistory]
+		INSERT INTO [trace].[ActivityLogHistory]
 			([session_id],
 			 [RequestStartTime],
 			 [RequestStatus],
@@ -339,7 +339,7 @@ BEGIN
 
 	-------------------------Purging Expired Recors from monitoring table
 	SET @myLogRetentionDays=-1*@myLogRetentionDays
-	DELETE FROM [DBA].[trace].[ActivityLogHistory] WHERE [RequestStartTime] < DATEADD(DAY,@myLogRetentionDays,@myCurrentTime)
+	DELETE FROM [trace].[ActivityLogHistory] WHERE [RequestStartTime] < DATEADD(DAY,@myLogRetentionDays,@myCurrentTime)
 END
 GO
 GRANT EXECUTE ON  [dbo].[dbasp_activity_monitor] TO [role_perfmon_collector]

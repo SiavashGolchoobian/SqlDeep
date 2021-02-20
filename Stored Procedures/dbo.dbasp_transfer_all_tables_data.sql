@@ -1254,7 +1254,7 @@ BEGIN
 				@myNewLine+ N'					EXEC (@mySQLStatement);'+
 				@myNewLine+ N'				END'+
 				@myNewLine+ N'				IF N'''+ CAST(@LoadMethod AS NVARCHAR(MAX)) +''' IN (N''CMD'',N''POWERSHELL'')'+
-				@myNewLine+ N'					EXEC DBA.dbo.dbasp_print_text @mySQLStatement'+
+				@myNewLine+ N'					EXEC SqlDeep.dbo.dbasp_print_text @mySQLStatement'+
 				@myNewLine+ N'			END TRY'+
 				@myNewLine+ N'			BEGIN CATCH'+
 				@myNewLine+ N'				SET @CustomMessage=''Insert Data error on '+QUOTENAME(@DestinationDatabaseName)+N'''' +
@@ -1303,7 +1303,7 @@ BEGIN
 				@myNewLine+ N'INSERT INTO @SQLCommandsTable([Id],[SQLStatement])'+
 				@myNewLine+ N'SELECT ROW_NUMBER() OVER (ORDER BY CASE [MultipleInsertionOrder] WHEN 1 THEN 1 ELSE 2 END ASC, [TableSizeKb] DESC,[RowCount] DESC,[MultipleInsertionOrder],[ID]),[SQLStatement] FROM #InsertTable'+
 				@myNewLine+ N'PRINT ''------------- Insert Data via Job'';' +
-				@myNewLine+ N'EXECUTE [DBA].[dbo].[dbasp_execute_multiple_sql] @BatchId,@SQLCommandsTable,@DegreeOfPrallelism,@RetryAttemptsOnFailure,DEFAULT,@PrintOnly'+
+				@myNewLine+ N'EXECUTE [SqlDeep].[dbo].[dbasp_execute_multiple_sql] @BatchId,@SQLCommandsTable,@DegreeOfPrallelism,@RetryAttemptsOnFailure,DEFAULT,@PrintOnly'+
 				@myNewLine+ N'SELECT [ID],[SQLStatement],[RowCount],[PageCount],[TableSizeKb] FROM #InsertTable ORDER BY CASE [MultipleInsertionOrder] WHEN 1 THEN 1 ELSE 2 END ASC, [TableSizeKb] DESC,[RowCount] DESC,[ID]	--Executopn orders and batch status'+
 				@myNewLine+ N'SELECT [object_name],MAX(last_commited_batch) AS last_commited_batch, MAX(log_time) AS log_time FROM ' + CAST(@myLogTableName AS NVARCHAR(MAX)) + N' WITH (NOLOCK) GROUP BY [object_name] ORDER BY 3 DESC	--Followe batch insert operations'+
 				@myNewLine+ N'PRINT ''------------- !!! Copy printed output script and execute it (or replace @PrintOnly with 0 value) to execute it automatically''' +

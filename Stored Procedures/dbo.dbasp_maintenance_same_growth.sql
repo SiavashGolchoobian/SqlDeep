@@ -65,7 +65,7 @@ BEGIN
 									@myNewLine+ N'	AND [data_space_id] IN (SELECT [data_space_id] from sys.[database_files])'+
 									@myNewLine+ N' '+
 									CASE @AllowKillUsers
-										WHEN 1 THEN @myNewLine+ N'EXECUTE [DBA].[dbo].[dbasp_kill_db_users] ''' + @Database_Name + ''',DEFAULT,DEFAULT,DEFAULT,0'
+										WHEN 1 THEN @myNewLine+ N'EXECUTE [SqlDeep].[dbo].[dbasp_kill_db_users] ''' + @Database_Name + ''',DEFAULT,DEFAULT,DEFAULT,0'
 										ELSE N''
 									END+
 									@myNewLine+ N'EXEC (@myCmd);'+

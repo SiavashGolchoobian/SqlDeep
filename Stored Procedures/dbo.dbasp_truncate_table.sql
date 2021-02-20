@@ -170,7 +170,7 @@ BEGIN
 			@myNewLine+ N'			END TRY'+
 			@myNewLine+ N'			BEGIN CATCH'+
 			@myNewLine+ N'				SET @CustomMessage1=''Drop Constraint error on '+@Database_Name+N'''' +
-			@myNewLine+ N'				EXECUTE [DBA].[dbo].[dbasp_get_error_info] @CustomMessage1,1,0,1,0,NULL'+
+			@myNewLine+ N'				EXECUTE [SqlDeep].[dbo].[dbasp_get_error_info] @CustomMessage1,1,0,1,0,NULL'+
 			@myNewLine+ N'			END CATCH'+
 			@myNewLine+ N''+
 			@myNewLine+ N'			FETCH NEXT FROM @myCursor_DC INTO @mySQLStatement'+
@@ -196,7 +196,7 @@ BEGIN
 			@myNewLine+ N'			END TRY'+
 			@myNewLine+ N'			BEGIN CATCH'+
 			@myNewLine+ N'				SET @CustomMessage1=''Truncate Table error on '+@Database_Name+N'''' +
-			@myNewLine+ N'				EXECUTE [DBA].[dbo].[dbasp_get_error_info] @CustomMessage1,1,0,1,0,NULL'+
+			@myNewLine+ N'				EXECUTE [SqlDeep].[dbo].[dbasp_get_error_info] @CustomMessage1,1,0,1,0,NULL'+
 			@myNewLine+ N'			END CATCH'+
 			@myNewLine+ N''+
 			@myNewLine+ N'			FETCH NEXT FROM @myCursor_TT INTO @mySQLStatement'+
@@ -222,7 +222,7 @@ BEGIN
 			@myNewLine+ N'			END TRY'+
 			@myNewLine+ N'			BEGIN CATCH'+
 			@myNewLine+ N'				SET @CustomMessage1=''Create Constraint error on '+@Database_Name+N'''' +
-			@myNewLine+ N'				EXECUTE [DBA].[dbo].[dbasp_get_error_info] @CustomMessage1,1,0,1,0,NULL'+
+			@myNewLine+ N'				EXECUTE [SqlDeep].[dbo].[dbasp_get_error_info] @CustomMessage1,1,0,1,0,NULL'+
 			@myNewLine+ N'			END CATCH'+
 			@myNewLine+ N''+
 			@myNewLine+ N'			FETCH NEXT FROM @myCursor_CC INTO @mySQLStatement'+
@@ -248,7 +248,7 @@ BEGIN
 			@myNewLine+	N'DROP TABLE #CreateConstarint; '
 			AS NVARCHAR(MAX))
 
-		EXEC [DBA].[dbo].[dbasp_print_text] @mySQLScript		
+		EXEC [dbo].[dbasp_print_text] @mySQLScript		
 
 		IF @PrintOnly=0
 			PRINT (@myNewLine + '--Excexution Report--');
@@ -260,7 +260,7 @@ BEGIN
 		BEGIN CATCH
 			DECLARE @CustomMessage1 NVARCHAR(255)
 			SET @CustomMessage1='TruncateDb error on ' + @Database_Name
-			EXECUTE [DBA].[dbo].[dbasp_get_error_info] @CustomMessage1,1,0,1,0,NULL
+			EXECUTE [dbo].[dbasp_get_error_info] @CustomMessage1,1,0,1,0,NULL
 		END CATCH
 		FETCH NEXT FROM @myCursor INTO @Database_Name
 	END

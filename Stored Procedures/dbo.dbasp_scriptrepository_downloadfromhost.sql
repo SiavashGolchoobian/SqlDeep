@@ -34,10 +34,10 @@ BEGIN
 		INSERT INTO @myAudienceTable([Position],[Parameter]) SELECT [myList].[Position], [myList].[Parameter] FROM [dbo].[dbafn_split](',',@AudienceType) AS myList WHERE LEN([myList].[Parameter])>0
 		SELECT @myAudienceList=@myAudienceList + N',''''' + [myList].[Parameter] + N'''''' FROM @myAudienceTable AS myList
 		SET @myAudienceList = CASE WHEN LEN(@myAudienceList)>0 THEN RIGHT(@myAudienceList,LEN(@myAudienceList)-1) ELSE NULL END
-		SET @myLastRecord=ISNULL((SELECT MAX([ScriptRepositoryGuest].[RecordId]) FROM [DBA].[dbo].[ScriptRepositoryGuest]),@myBigIntMinVal)
-		SET @myLastChange=ISNULL((SELECT MAX([RowVersion]) FROM [DBA].[dbo].[ScriptRepositoryGuest]),0)
+		SET @myLastRecord=ISNULL((SELECT MAX([ScriptRepositoryGuest].[RecordId]) FROM [dbo].[ScriptRepositoryGuest]),@myBigIntMinVal)
+		SET @myLastChange=ISNULL((SELECT MAX([RowVersion]) FROM [dbo].[ScriptRepositoryGuest]),0)
 
-		SET @myInnerCommand = N'INSERT INTO [DBA].[dbo].[ScriptRepositoryGuest](RecordId,ScriptText,TargetDatabase,ScriptType,AudienceType,Attachment,CreatedDate,RecordRef,CheckValue,RowVersion) SELECT RecordId,ScriptText,TargetDatabase,ScriptType,AudienceType,Attachment,CreatedDate,RecordRef,CheckValue,RowVersion FROM OPENQUERY([' + @LinkedServerName + '],''Select RecordId,ScriptText,TargetDatabase,ScriptType,AudienceType,Attachment,CreatedDate,RecordRef,CheckValue,RowVersion FROM [DBA].[dbo].[ScriptRepositoryHost] WHERE '+ 
+		SET @myInnerCommand = N'INSERT INTO [SqlDeep].[dbo].[ScriptRepositoryGuest](RecordId,ScriptText,TargetDatabase,ScriptType,AudienceType,Attachment,CreatedDate,RecordRef,CheckValue,RowVersion) SELECT RecordId,ScriptText,TargetDatabase,ScriptType,AudienceType,Attachment,CreatedDate,RecordRef,CheckValue,RowVersion FROM OPENQUERY([' + @LinkedServerName + '],''Select RecordId,ScriptText,TargetDatabase,ScriptType,AudienceType,Attachment,CreatedDate,RecordRef,CheckValue,RowVersion FROM [SqlDeep].[dbo].[ScriptRepositoryHost] WHERE '+ 
 								CASE @IgnoreRowVersion WHEN 0 THEN 'CONVERT(BIGINT,RowVersion) > ' + CAST(CONVERT(BIGINT, @myLastChange) AS NVARCHAR(MAX)) + N' AND ' ELSE N'' END +
 								N'RecordId > ' + CAST(@myLastRecord AS NVARCHAR(MAX)) + N' AND AudienceType IN (' + @myAudienceList +')'')'
 		PRINT @myInnerCommand

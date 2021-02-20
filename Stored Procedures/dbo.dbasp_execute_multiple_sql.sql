@@ -88,30 +88,30 @@ BEGIN
 			@myNewLine+ N'DECLARE @mySQLStatement NVARCHAR(MAX)'+
 			@myNewLine+ N'SET QUOTED_IDENTIFIER ON'+
 			@myNewLine+ N'SET @myJobNo=N'''+ CAST(@myJobNo AS NVARCHAR(MAX)) + N''''+
-			@myNewLine+ N'WHILE EXISTS (SELECT 1 FROM [DBA].[trace].[Tasks] AS [myTasks] WHERE [myTasks].[BatchId]=' + CAST(@BatchId AS NVARCHAR(MAX)) + ' AND ([myTasks].[ProcessStatus]=''QUEUED'' OR ([myTasks].[ProcessStatus]=''FAIL'' AND [myTasks].[TryCount]<[myTasks].[MaxTryCount])))'+ 
+			@myNewLine+ N'WHILE EXISTS (SELECT 1 FROM [SqlDeep].[trace].[Tasks] AS [myTasks] WHERE [myTasks].[BatchId]=' + CAST(@BatchId AS NVARCHAR(MAX)) + ' AND ([myTasks].[ProcessStatus]=''QUEUED'' OR ([myTasks].[ProcessStatus]=''FAIL'' AND [myTasks].[TryCount]<[myTasks].[MaxTryCount])))'+ 
 			@myNewLine+ N'BEGIN'+
 			@myNewLine+ N'--=======Make Continious loop'+
 			@myNewLine+ N'	BEGIN TRANSACTION'+
 			@myNewLine+ N'		--=======Pick a TaskId from TaskList'+
-			@myNewLine+ N'		SET @myTaskId=(SELECT TOP 1 [myTasks].[TaskId] FROM [DBA].[trace].[Tasks] AS myTasks WITH (UPDLOCK,READPAST) WHERE [myTasks].[BatchId]=' + CAST(@BatchId AS NVARCHAR(MAX)) + ' AND ([myTasks].[ProcessStatus]=''QUEUED'' OR ([myTasks].[ProcessStatus]=''FAIL'' AND [myTasks].[TryCount]<[myTasks].[MaxTryCount])) ORDER BY [myTasks].[TryCount],[myTasks].[TaskId])'+
+			@myNewLine+ N'		SET @myTaskId=(SELECT TOP 1 [myTasks].[TaskId] FROM [SqlDeep].[trace].[Tasks] AS myTasks WITH (UPDLOCK,READPAST) WHERE [myTasks].[BatchId]=' + CAST(@BatchId AS NVARCHAR(MAX)) + ' AND ([myTasks].[ProcessStatus]=''QUEUED'' OR ([myTasks].[ProcessStatus]=''FAIL'' AND [myTasks].[TryCount]<[myTasks].[MaxTryCount])) ORDER BY [myTasks].[TryCount],[myTasks].[TaskId])'+
 			@myNewLine+ N'		IF @myTaskId IS NOT NULL'+
 			@myNewLine+ N'		BEGIN'+
 			@myNewLine+ N'			--=======Update Task Status'+
-			@myNewLine+ N'			UPDATE [DBA].[trace].[Tasks] SET [ProcessStatus]=''RUNNING'', [StartTime]=GETDATE(),[TryCount]=ISNULL([TryCount],0)+1,[Executor]=ISNULL([Executor],N'''')+N'',''+@myJobNo WHERE [TaskId]=@myTaskId'+
+			@myNewLine+ N'			UPDATE [SqlDeep].[trace].[Tasks] SET [ProcessStatus]=''RUNNING'', [StartTime]=GETDATE(),[TryCount]=ISNULL([TryCount],0)+1,[Executor]=ISNULL([Executor],N'''')+N'',''+@myJobNo WHERE [TaskId]=@myTaskId'+
 			@myNewLine+ N'		END'+
 			@myNewLine+ N'	COMMIT TRANSACTION'+
 			@myNewLine+ N''+
 			@myNewLine+ N'	IF @myTaskId IS NOT NULL'+
 			@myNewLine+ N'		BEGIN'+
 			@myNewLine+ N'		--=======Extract Task from TaskList'+
-			@myNewLine+ N'		SELECT @mySQLStatement=[myTasks].[SQLStatementValue] FROM [DBA].[trace].[Tasks] AS myTasks WHERE [myTasks].[TaskId]=@myTaskId'+
+			@myNewLine+ N'		SELECT @mySQLStatement=[myTasks].[SQLStatementValue] FROM [SqlDeep].[trace].[Tasks] AS myTasks WHERE [myTasks].[TaskId]=@myTaskId'+
 			@myNewLine+ N'		--=======Start of executing commands'+
 			@myNewLine+ N'		BEGIN TRY'+
 			@myNewLine+ N'			EXECUTE (@mySQLStatement);'+
-			@myNewLine+ N'			UPDATE [DBA].[trace].[Tasks] SET [ProcessStatus]=''SUCCESS'', [EndTime]=GETDATE() WHERE [TaskId]=@myTaskId'+
+			@myNewLine+ N'			UPDATE [SqlDeep].[trace].[Tasks] SET [ProcessStatus]=''SUCCESS'', [EndTime]=GETDATE() WHERE [TaskId]=@myTaskId'+
 			@myNewLine+ N'		END TRY'+
 			@myNewLine+ N'		BEGIN CATCH'+
-			@myNewLine+ N'			UPDATE [DBA].[trace].[Tasks] SET [ProcessStatus]=''FAIL'', [EndTime]=GETDATE(),[ErrorMessage]=ERROR_MESSAGE() WHERE [TaskId]=@myTaskId'+
+			@myNewLine+ N'			UPDATE [SqlDeep].[trace].[Tasks] SET [ProcessStatus]=''FAIL'', [EndTime]=GETDATE(),[ErrorMessage]=ERROR_MESSAGE() WHERE [TaskId]=@myTaskId'+
 			@myNewLine+ N'		END CATCH'+
 			@myNewLine+ N'	END'+
 			@myNewLine+ N'END'
@@ -136,12 +136,12 @@ BEGIN
 	END
 
 	--Print Jobs
-		SET @myMonitorCommand=@myMonitorCommand + @myNewLine + N'SELECT * FROM [DBA].[trace].[Tasks] AS [myTasks] WITH(NOLOCK) WHERE [myTasks].[BatchId]=' + CAST(@BatchId AS NVARCHAR(50)) + N' AND [myTasks].[ProcessStatus] IN (''QUEUED'',''SUCCESS'') ORDER BY [myTasks].[StartTime] DESC, [myTasks].[TaskId]'
-		SET @myMonitorCommand=@myMonitorCommand + @myNewLine + N'SELECT * FROM [DBA].[trace].[Tasks] AS [myTasks] WITH(NOLOCK) WHERE [myTasks].[BatchId]=' + CAST(@BatchId AS NVARCHAR(50)) + N' AND [myTasks].[ProcessStatus] NOT IN (''QUEUED'',''SUCCESS'') ORDER BY [myTasks].[StartTime] DESC, [myTasks].[TaskId]'
+		SET @myMonitorCommand=@myMonitorCommand + @myNewLine + N'SELECT * FROM [SqlDeep].[trace].[Tasks] AS [myTasks] WITH(NOLOCK) WHERE [myTasks].[BatchId]=' + CAST(@BatchId AS NVARCHAR(50)) + N' AND [myTasks].[ProcessStatus] IN (''QUEUED'',''SUCCESS'') ORDER BY [myTasks].[StartTime] DESC, [myTasks].[TaskId]'
+		SET @myMonitorCommand=@myMonitorCommand + @myNewLine + N'SELECT * FROM [SqlDeep].[trace].[Tasks] AS [myTasks] WITH(NOLOCK) WHERE [myTasks].[BatchId]=' + CAST(@BatchId AS NVARCHAR(50)) + N' AND [myTasks].[ProcessStatus] NOT IN (''QUEUED'',''SUCCESS'') ORDER BY [myTasks].[StartTime] DESC, [myTasks].[TaskId]'
 		EXEC dbo.[dbasp_print_text] @myExecuteCommand
 		EXEC dbo.[dbasp_print_text] @myMonitorCommand
 		EXEC dbo.[dbasp_print_text] @myDropCommand
-		SELECT * FROM [DBA].[trace].[Tasks] AS [myTasks] WITH(NOLOCK) WHERE [myTasks].[BatchId]=@BatchId AND [myTasks].[ProcessStatus] NOT IN ('QUEUE','SUCCESS') ORDER BY [myTasks].[StartTime] DESC, [myTasks].[TaskId]
+		SELECT * FROM [SqlDeep].[trace].[Tasks] AS [myTasks] WITH(NOLOCK) WHERE [myTasks].[BatchId]=@BatchId AND [myTasks].[ProcessStatus] NOT IN ('QUEUE','SUCCESS') ORDER BY [myTasks].[StartTime] DESC, [myTasks].[TaskId]
 
 	--Execute Jobs
 	IF @PrintOnly=0

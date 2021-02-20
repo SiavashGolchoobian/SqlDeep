@@ -59,7 +59,7 @@ BEGIN
 			[myLogFiles].name AS LogName,
 			[myLogFiles].file_id AS [file_id]
 		FROM 
-			[DBA].[dbo].[dbafn_database_list](@DatabaseNames,1,0,1,1,1) AS myDbList
+			[dbo].[dbafn_database_list](@DatabaseNames,1,0,1,1,1) AS myDbList
 			INNER JOIN master.sys.master_files AS myLogFiles ON [myDbList].[Name]=DB_NAME([myLogFiles].[database_id])
 		WHERE 
 			[myLogFiles].type=1

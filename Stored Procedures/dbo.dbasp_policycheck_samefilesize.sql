@@ -72,7 +72,7 @@ BEGIN
 --      <Constant>
 --        <TypeClass>String</TypeClass>
 --        <ObjType>System.String</ObjType>
---        <Value>[DBA].[dbo].[dbasp_policycheck_samefilesize] </Value>
+--        <Value>[SqlDeep].[dbo].[dbasp_policycheck_samefilesize] </Value>
 --      </Constant>
 --      <Function>
 --        <TypeClass>String</TypeClass>

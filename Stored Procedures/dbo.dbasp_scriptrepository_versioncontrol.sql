@@ -69,8 +69,8 @@ BEGIN
 			SET @myStatement=CAST (N'' AS NVARCHAR(MAX))
 			SET @myStatement=@myStatement+CAST(N'SELECT ''' + @myCurrentDatabase + ''',CAST([name] as nvarchar(max)), CAST([value] as nvarchar(max)) from ' + CAST(QUOTENAME(@myCurrentDatabase) AS NVARCHAR(MAX)) + N'.sys.extended_properties WHERE class=0' AS NVARCHAR(MAX))
 			INSERT INTO @myEPTable ([DatabaseName],[EPName],[EPValue]) EXECUTE sp_executesql @myStatement
-			INSERT INTO @myAppliedTable ([RecordId]) SELECT RecordId FROM [DBA].[dbo].[ScriptRepositoryGuest] WHERE [TargetDatabase]=@myCurrentDatabase AND [IsEnabled]=1 AND CASE @myIgnoreCheckValue WHEN 1 THEN 1 ELSE [CalculatedCheckValue] END = CASE @myIgnoreCheckValue WHEN 1 THEN 1 ELSE [CheckValue] END AND [LastExecutionStatus] IN (@myStatus_SUCCEED,@myStatus_CANCELED) 
-			INSERT INTO @myNotAppliedTable ([RecordId]) SELECT RecordId FROM [DBA].[dbo].[ScriptRepositoryGuest] WHERE [TargetDatabase]=@myCurrentDatabase AND [IsEnabled]=1 AND CASE @myIgnoreCheckValue WHEN 1 THEN 1 ELSE [CalculatedCheckValue] END = CASE @myIgnoreCheckValue WHEN 1 THEN 1 ELSE [CheckValue] END AND ISNULL([LastExecutionStatus],N'') NOT IN (@myStatus_SUCCEED,@myStatus_CANCELED)
+			INSERT INTO @myAppliedTable ([RecordId]) SELECT RecordId FROM [dbo].[ScriptRepositoryGuest] WHERE [TargetDatabase]=@myCurrentDatabase AND [IsEnabled]=1 AND CASE @myIgnoreCheckValue WHEN 1 THEN 1 ELSE [CalculatedCheckValue] END = CASE @myIgnoreCheckValue WHEN 1 THEN 1 ELSE [CheckValue] END AND [LastExecutionStatus] IN (@myStatus_SUCCEED,@myStatus_CANCELED) 
+			INSERT INTO @myNotAppliedTable ([RecordId]) SELECT RecordId FROM [dbo].[ScriptRepositoryGuest] WHERE [TargetDatabase]=@myCurrentDatabase AND [IsEnabled]=1 AND CASE @myIgnoreCheckValue WHEN 1 THEN 1 ELSE [CalculatedCheckValue] END = CASE @myIgnoreCheckValue WHEN 1 THEN 1 ELSE [CheckValue] END AND ISNULL([LastExecutionStatus],N'') NOT IN (@myStatus_SUCCEED,@myStatus_CANCELED)
 			SELECT @myDatabaseRepositoryVersion=MAX([RecordId]) FROM @myAppliedTable WHERE [@myAppliedTable].[RecordId]<(SELECT MIN(RecordId) FROM @myNotAppliedTable) OR NOT EXISTS (SELECT 1 FROM @myNotAppliedTable)
 			SELECT @myDatabaseRepositoryMaxVersion=MAX([RecordId]) FROM @myAppliedTable
 			IF EXISTS (SELECT 1 FROM @myEpTable WHERE [@myEPTable].[DatabaseName]=@myCurrentDatabase AND [@myEPTable].[EPName]=@myEPVersionKey AND ISNUMERIC([@myEPTable].[EPValue])=1)
@@ -121,7 +121,7 @@ BEGIN
 			[myRepository].[LastExecutionStatus]=@myStatus_CANCELED,
 			[myRepository].[ExecutionLog] = CAST(N'Canceled on ' AS NVARCHAR(MAX)) + CAST(GETDATE() AS NVARCHAR(MAX)) + CAST(N' - ' + @myNewLine AS NVARCHAR(MAX)) + CAST(N'Because of version synchronization between Database version and repository version, DB version is higher: ' AS NVARCHAR(MAX)) + CAST([myVersionInfo].[DatabaseValue] AS NVARCHAR(MAX)) + CAST(@myNewLine + N'-----' AS NVARCHAR(MAX)) + ISNULL(CAST([myRepository].[ExecutionLog] AS NVARCHAR(MAX)),CAST(N'' AS NVARCHAR(MAX)))
 		FROM
-			[DBA].[dbo].[ScriptRepositoryGuest] AS myRepository
+			[dbo].[ScriptRepositoryGuest] AS myRepository
 			INNER JOIN
 				(
 				SELECT
@@ -156,7 +156,7 @@ BEGIN
 								[@myEPTable].[EPName]=@myEPVersionKey 
 								AND CAST([@myEPTable].[EPValue] AS BIGINT) < [@myEPTable].[RepositoryValue]
 							) AS myEPMinRequiredRecordId
-							LEFT OUTER JOIN [DBA].[dbo].[ScriptRepositoryGuest]  AS myRepository ON myRepository.TargetDatabase=myEPMinRequiredRecordId.[DatabaseName] AND myRepository.RecordId=myEPMinRequiredRecordId.MinRecordId
+							LEFT OUTER JOIN [dbo].[ScriptRepositoryGuest]  AS myRepository ON myRepository.TargetDatabase=myEPMinRequiredRecordId.[DatabaseName] AND myRepository.RecordId=myEPMinRequiredRecordId.MinRecordId
 						WHERE
 							myRepository.[RecordId] IS NULL
 						)
@@ -167,7 +167,7 @@ BEGIN
 				[myRepository].[LastExecutionStatus]=NULL,
 				[myRepository].[ExecutionLog] = CAST(N'Nulled on ' AS NVARCHAR(MAX)) + CAST(GETDATE() AS NVARCHAR(MAX)) + CAST(N' - ' + @myNewLine AS NVARCHAR(MAX)) + CAST(N'Because of version synchronization between Database version and repository, DB version is lower: ' AS NVARCHAR(MAX)) + CAST([myVersionInfo].[DatabaseValue] AS NVARCHAR(MAX)) + CAST(@myNewLine + N'-----' AS NVARCHAR(MAX)) + ISNULL(CAST([myRepository].[ExecutionLog] AS NVARCHAR(MAX)),CAST(N'' AS NVARCHAR(MAX)))
 			FROM
-				[DBA].[dbo].[ScriptRepositoryGuest] AS myRepository
+				[dbo].[ScriptRepositoryGuest] AS myRepository
 				INNER JOIN
 					(
 					SELECT
@@ -205,7 +205,7 @@ BEGIN
 					[@myEPTable].[EPName]=@myEPVersionKey 
 					AND CAST([@myEPTable].[EPValue] AS BIGINT) < [@myEPTable].[RepositoryValue]
 				) AS myEPMinRequiredRecordId
-				LEFT OUTER JOIN [DBA].[dbo].[ScriptRepositoryGuest]  AS myRepository ON myRepository.TargetDatabase=myEPMinRequiredRecordId.[DatabaseName] AND myRepository.RecordId=myEPMinRequiredRecordId.MinRecordId
+				LEFT OUTER JOIN [dbo].[ScriptRepositoryGuest]  AS myRepository ON myRepository.TargetDatabase=myEPMinRequiredRecordId.[DatabaseName] AND myRepository.RecordId=myEPMinRequiredRecordId.MinRecordId
 			WHERE
 				myRepository.[RecordId] IS NULL
 

@@ -13,7 +13,7 @@ GO
 -- Input Parameters:
 --	@AlertType:				'...'	//Any custom message as subject or category
 --	@AlertText				'...'	//Any custom xml message as detail description
---	@LogAlertToTable		0 or 1	//1 to Log message in DBA.trace.Events table or 0 to skip it
+--	@LogAlertToTable		0 or 1	//1 to Log message in trace.Events table or 0 to skip it
 --	@LogAlertToSqlLog:		0 or 1	//1 to Raise an error on SQL log or 0 to skip it
 --	@PrintAlertToConsole:	0 or 1	//1 to Print output result or 0 to skip it
 --	@ReturnAlertAsResultset:0 or 1	//1 to Return output result grid or 0 to skip it

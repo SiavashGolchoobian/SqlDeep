@@ -30,7 +30,7 @@ BEGIN
 
 	SET @ReturnValue= cast(0 as bit)	--0 is OK and 1 is Error
 	SET @myCursor_Roots=CURSOR For
-		Select [myList].[Parameter] AS [Path] FROM [DBA].[dbo].[dbafn_split](N',',@FolderPath) AS myList 
+		Select [myList].[Parameter] AS [Path] FROM [dbo].[dbafn_split](N',',@FolderPath) AS myList 
 
 	OPEN @myCursor_Roots
 	FETCH NEXT FROM @myCursor_Roots INTO @myCurrentRoot

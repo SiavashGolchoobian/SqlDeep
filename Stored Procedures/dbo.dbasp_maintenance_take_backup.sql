@@ -89,7 +89,7 @@ BEGIN
 	SET @myIsCompressionEnabled = ISNULL((SELECT CAST([myConfig].[value] AS BIT) FROM sys.configurations AS myConfig  WHERE [myConfig].[name] = N'backup compression default'),0)	--Determin Default behaviour of Backup Compression
 	SET @BackupFileNamingType=UPPER(@BackupFileNamingType);
 	--=====Prerequisites Control
-	IF NOT EXISTS (SELECT 1 FROM [DBA].[dbo].[dbafn_split](N',',@LocalDestinationPath) AS myList WHERE [myList].[Parameter] IS NOT NULL AND LEN(RTRIM(LTRIM([myList].[Parameter])))>0)
+	IF NOT EXISTS (SELECT 1 FROM [dbo].[dbafn_split](N',',@LocalDestinationPath) AS myList WHERE [myList].[Parameter] IS NOT NULL AND LEN(RTRIM(LTRIM([myList].[Parameter])))>0)
 	BEGIN
 		SET @myIsPrerequisitesPassed=0
 		SET @myError_Message=@myError_Message + N'@LocalDestinationPath is empty or invalid.' + @myNewLine
@@ -144,7 +144,7 @@ BEGIN
 				SELECT 
 					[myList].[Parameter]+N'\'+ @myFolderDate AS [Path]
 				FROM 
-					[DBA].[dbo].[dbafn_split](N',',@LocalDestinationPath) AS myList 
+					[dbo].[dbafn_split](N',',@LocalDestinationPath) AS myList 
 				WHERE 
 					[myList].[Parameter] IS NOT NULL AND LEN(RTRIM(LTRIM([myList].[Parameter])))>0
 				ORDER BY
