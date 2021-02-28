@@ -36,7 +36,8 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Recycle 
 		@retry_attempts=0, 
 		@retry_interval=0, 
 		@os_run_priority=0, @subsystem=N'TSQL', 
-		@command=N'DECLARE @RecyclingThereshold_MB int=10
+		@command=N'DECLARE @RecyclingThereshold_MB INT
+SET @RecyclingThereshold_MB=10
 
 EXECUTE [dbo].[dbasp_maintenance_cycle_error_log] @RecyclingThereshold_MB
 ', 

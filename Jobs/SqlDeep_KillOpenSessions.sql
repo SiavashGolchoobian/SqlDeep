@@ -36,7 +36,7 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Kill old
 		@retry_attempts=0, 
 		@retry_interval=0, 
 		@os_run_priority=0, @subsystem=N'TSQL', 
-		@command=N'DECLARE @DatabaseNames nvarchar(max)=''<ALL_DATABASES>''
+		@command=N'DECLARE @DatabaseNames nvarchar(max)=''<ALL_USER_DATABASES>''
 DECLARE @DurationThresholdMinutes int=10
 DECLARE @ExceptActiveSessions bit=1
 DECLARE @ExceptJobSessions bit=1
@@ -70,11 +70,11 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Kill old
 		@retry_attempts=0, 
 		@retry_interval=0, 
 		@os_run_priority=0, @subsystem=N'TSQL', 
-		@command=N'DECLARE @DatabaseNames nvarchar(max)=''<ALL_DATABASES>''
+		@command=N'DECLARE @DatabaseNames nvarchar(max)=''<ALL_USER_DATABASES>''
 DECLARE @DurationThresholdMinutes int=120
 DECLARE @ExceptActiveSessions bit=1
 DECLARE @ExceptJobSessions bit=1
-DECLARE @ExceptSSMSSessions bit=1
+DECLARE @ExceptSSMSSessions bit=0
 DECLARE @ExceptSysadmins bit=0
 DECLARE @ExceptedLogins nvarchar(max)=NULL
 DECLARE @ExceptedHostnames nvarchar(max)=NULL
