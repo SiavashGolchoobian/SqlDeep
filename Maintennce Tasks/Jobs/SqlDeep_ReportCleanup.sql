@@ -1,11 +1,11 @@
 USE [msdb]
 GO
 
-/****** Object:  Job [SqlDeep_ReportCleanup]    Script Date: 2/28/2021 9:17:08 AM ******/
+/****** Object:  Job [SqlDeep_ReportCleanup]    Script Date: 3/1/2021 8:49:24 AM ******/
 BEGIN TRANSACTION
 DECLARE @ReturnCode INT
 SELECT @ReturnCode = 0
-/****** Object:  JobCategory [SqlDeep Jobs]    Script Date: 2/28/2021 9:17:08 AM ******/
+/****** Object:  JobCategory [SqlDeep Jobs]    Script Date: 3/1/2021 8:49:24 AM ******/
 IF NOT EXISTS (SELECT name FROM msdb.dbo.syscategories WHERE name=N'SqlDeep Jobs' AND category_class=1)
 BEGIN
 EXEC @ReturnCode = msdb.dbo.sp_add_category @class=N'JOB', @type=N'LOCAL', @name=N'SqlDeep Jobs'
@@ -25,7 +25,7 @@ EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'SqlDeep_ReportCleanup',
 		@category_name=N'SqlDeep Jobs', 
 		@owner_login_name=N'sa', @job_id = @jobId OUTPUT
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-/****** Object:  Step [ReportCleanup]    Script Date: 2/28/2021 9:17:08 AM ******/
+/****** Object:  Step [ReportCleanup]    Script Date: 3/1/2021 8:49:25 AM ******/
 EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'ReportCleanup', 
 		@step_id=1, 
 		@cmdexec_success_code=0, 

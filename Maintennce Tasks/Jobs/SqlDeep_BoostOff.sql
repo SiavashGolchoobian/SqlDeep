@@ -1,11 +1,11 @@
 USE [msdb]
 GO
 
-/****** Object:  Job [SqlDeep_BoostOff]    Script Date: 2/28/2021 9:24:42 AM ******/
+/****** Object:  Job [SqlDeep_BoostOff]    Script Date: 3/1/2021 8:47:35 AM ******/
 BEGIN TRANSACTION
 DECLARE @ReturnCode INT
 SELECT @ReturnCode = 0
-/****** Object:  JobCategory [SqlDeep Jobs]    Script Date: 2/28/2021 9:24:42 AM ******/
+/****** Object:  JobCategory [SqlDeep Jobs]    Script Date: 3/1/2021 8:47:35 AM ******/
 IF NOT EXISTS (SELECT name FROM msdb.dbo.syscategories WHERE name=N'SqlDeep Jobs' AND category_class=1)
 BEGIN
 EXEC @ReturnCode = msdb.dbo.sp_add_category @class=N'JOB', @type=N'LOCAL', @name=N'SqlDeep Jobs'
@@ -25,7 +25,7 @@ EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'SqlDeep_BoostOff',
 		@category_name=N'SqlDeep Jobs', 
 		@owner_login_name=N'sa', @job_id = @jobId OUTPUT
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-/****** Object:  Step [scheme_min sub_processor]    Script Date: 2/28/2021 9:24:42 AM ******/
+/****** Object:  Step [scheme_min sub_processor]    Script Date: 3/1/2021 8:47:35 AM ******/
 EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'scheme_min sub_processor', 
 		@step_id=1, 
 		@cmdexec_success_code=0, 
@@ -39,7 +39,7 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'scheme_m
 		@command=N'c:\windows\system32\powercfg -setacvalueindex scheme_min sub_processor 5d76a2ca-e8c0-402f-a133-2158492d58ad 0', 
 		@flags=0
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-/****** Object:  Step [scheme_max sub_processor]    Script Date: 2/28/2021 9:24:42 AM ******/
+/****** Object:  Step [scheme_max sub_processor]    Script Date: 3/1/2021 8:47:35 AM ******/
 EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'scheme_max sub_processor', 
 		@step_id=2, 
 		@cmdexec_success_code=0, 
@@ -53,7 +53,7 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'scheme_m
 		@command=N'c:\windows\system32\powercfg -setacvalueindex scheme_max sub_processor 5d76a2ca-e8c0-402f-a133-2158492d58ad 0', 
 		@flags=0
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-/****** Object:  Step [scheme_balanced sub_processor]    Script Date: 2/28/2021 9:24:42 AM ******/
+/****** Object:  Step [scheme_balanced sub_processor]    Script Date: 3/1/2021 8:47:35 AM ******/
 EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'scheme_balanced sub_processor', 
 		@step_id=3, 
 		@cmdexec_success_code=0, 
@@ -67,7 +67,7 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'scheme_b
 		@command=N'c:\windows\system32\powercfg -setacvalueindex scheme_balanced sub_processor 5d76a2ca-e8c0-402f-a133-2158492d58ad 0', 
 		@flags=0
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-/****** Object:  Step [setactive scheme_current]    Script Date: 2/28/2021 9:24:42 AM ******/
+/****** Object:  Step [setactive scheme_current]    Script Date: 3/1/2021 8:47:35 AM ******/
 EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'setactive scheme_current', 
 		@step_id=4, 
 		@cmdexec_success_code=0, 
@@ -82,6 +82,8 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'setactiv
 		@flags=0
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
 EXEC @ReturnCode = msdb.dbo.sp_update_job @job_id = @jobId, @start_step_id = 1
+IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+EXEC @ReturnCode = msdb.dbo.sp_add_jobserver @job_id = @jobId, @server_name = N'(local)'
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
 COMMIT TRANSACTION
 GOTO EndSave

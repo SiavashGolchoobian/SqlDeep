@@ -1,11 +1,11 @@
 USE [msdb]
 GO
 
-/****** Object:  Job [SqlDeep_ActivityMonitor]    Script Date: 2/21/2021 10:40:34 PM ******/
+/****** Object:  Job [SqlDeep_ActivityMonitor]    Script Date: 3/1/2021 8:47:27 AM ******/
 BEGIN TRANSACTION
 DECLARE @ReturnCode INT
 SELECT @ReturnCode = 0
-/****** Object:  JobCategory [SqlDeep Jobs]    Script Date: 2/21/2021 10:40:34 PM ******/
+/****** Object:  JobCategory [SqlDeep Jobs]    Script Date: 3/1/2021 8:47:27 AM ******/
 IF NOT EXISTS (SELECT name FROM msdb.dbo.syscategories WHERE name=N'SqlDeep Jobs' AND category_class=1)
 BEGIN
 EXEC @ReturnCode = msdb.dbo.sp_add_category @class=N'JOB', @type=N'LOCAL', @name=N'SqlDeep Jobs'
@@ -25,7 +25,7 @@ EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'SqlDeep_ActivityMonitor',
 		@category_name=N'SqlDeep Jobs', 
 		@owner_login_name=N'sa', @job_id = @jobId OUTPUT
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-/****** Object:  Step [Capture sessions]    Script Date: 2/21/2021 10:40:34 PM ******/
+/****** Object:  Step [Capture sessions]    Script Date: 3/1/2021 8:47:27 AM ******/
 EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Capture sessions', 
 		@step_id=1, 
 		@cmdexec_success_code=0, 
@@ -39,8 +39,8 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Capture 
 		@command=N'DECLARE @GrabTransactionsOver_Second INT
 DECLARE @LogRetentionDays INT
 
-SET @GrabTransactionsOver_Second=10
-SET @LogRetentionDays=5
+SET @GrabTransactionsOver_Second=30
+SET @LogRetentionDays=3
 EXECUTE [dbo].[dbasp_activity_monitor] @GrabTransactionsOver_Second,@LogRetentionDays', 
 		@database_name=N'SqlDeep', 
 		@flags=0

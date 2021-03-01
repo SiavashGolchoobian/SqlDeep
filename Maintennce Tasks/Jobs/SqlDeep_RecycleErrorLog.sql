@@ -1,11 +1,11 @@
 USE [msdb]
 GO
 
-/****** Object:  Job [SqlDeep_RecycleErrorLog]    Script Date: 2/21/2021 10:36:32 PM ******/
+/****** Object:  Job [SqlDeep_RecycleErrorLog]    Script Date: 3/1/2021 8:49:06 AM ******/
 BEGIN TRANSACTION
 DECLARE @ReturnCode INT
 SELECT @ReturnCode = 0
-/****** Object:  JobCategory [SqlDeep Jobs]    Script Date: 2/21/2021 10:36:32 PM ******/
+/****** Object:  JobCategory [SqlDeep Jobs]    Script Date: 3/1/2021 8:49:06 AM ******/
 IF NOT EXISTS (SELECT name FROM msdb.dbo.syscategories WHERE name=N'SqlDeep Jobs' AND category_class=1)
 BEGIN
 EXEC @ReturnCode = msdb.dbo.sp_add_category @class=N'JOB', @type=N'LOCAL', @name=N'SqlDeep Jobs'
@@ -25,7 +25,7 @@ EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'SqlDeep_RecycleErrorLog',
 		@category_name=N'SqlDeep Jobs', 
 		@owner_login_name=N'sa', @job_id = @jobId OUTPUT
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-/****** Object:  Step [Recycle error log file]    Script Date: 2/21/2021 10:36:32 PM ******/
+/****** Object:  Step [Recycle error log file]    Script Date: 3/1/2021 8:49:06 AM ******/
 EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Recycle error log file', 
 		@step_id=1, 
 		@cmdexec_success_code=0, 
@@ -36,8 +36,7 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Recycle 
 		@retry_attempts=0, 
 		@retry_interval=0, 
 		@os_run_priority=0, @subsystem=N'TSQL', 
-		@command=N'DECLARE @RecyclingThereshold_MB INT
-SET @RecyclingThereshold_MB=10
+		@command=N'DECLARE @RecyclingThereshold_MB int=10
 
 EXECUTE [dbo].[dbasp_maintenance_cycle_error_log] @RecyclingThereshold_MB
 ', 
