@@ -3,7 +3,7 @@ GO
 SET ANSI_NULLS ON
 GO
 -- =============================================
--- Author:		<Golchoobian,Saffarpour>
+-- Author:		<Golchoobian>
 -- Create date: <3/3/2021>
 -- Version:		<3.0.0.0>
 -- Description:	<Calculate object dependency hierarchy>
