@@ -80,7 +80,9 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Check Ex
 		@retry_interval=0, 
 		@os_run_priority=0, @subsystem=N'PowerShell', 
 		@command=N'# Note update this variable for a different policy name
-$sourceOfPolicy = "."
+$sourceOfPolicy = $env:computername + "\DEFAULT"
+#$sourceOfPolicy = $env:computername + "\NODE"
+#$sourceOfPolicy = "DBCentralServer01\DEFAULT"
 $policyToEvaluate = "SqlDeep_CheckExtendedProperties"
 
 if (''$(ESCAPE_SQUOTE(INST))'' -eq ''MSSQLSERVER'') {$instname = ''\DEFAULT''} ELSE {$instname = ''''};
@@ -123,7 +125,9 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Check Da
 		@retry_interval=0, 
 		@os_run_priority=0, @subsystem=N'PowerShell', 
 		@command=N'# Note update this variable for a different policy name
-$sourceOfPolicy = "."
+$sourceOfPolicy = $env:computername + "\DEFAULT"
+#$sourceOfPolicy = $env:computername + "\NODE"
+#$sourceOfPolicy = "DBCentralServer01\DEFAULT"
 $policyToEvaluate = "SqlDeep_CheckDataFileSizing"
 
 if (''$(ESCAPE_SQUOTE(INST))'' -eq ''MSSQLSERVER'') {$instname = ''\DEFAULT''} ELSE {$instname = ''''};
@@ -166,7 +170,9 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Check Sa
 		@retry_interval=0, 
 		@os_run_priority=0, @subsystem=N'PowerShell', 
 		@command=N'# Note update this variable for a different policy name
-$sourceOfPolicy = "."
+$sourceOfPolicy = $env:computername + "\DEFAULT"
+#$sourceOfPolicy = $env:computername + "\NODE"
+#$sourceOfPolicy = "DBCentralServer01\DEFAULT"
 $policyToEvaluate = "SqlDeep_CheckSameFileSize"
 
 if (''$(ESCAPE_SQUOTE(INST))'' -eq ''MSSQLSERVER'') {$instname = ''\DEFAULT''} ELSE {$instname = ''''};
