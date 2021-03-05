@@ -1,5 +1,6 @@
-![](https://github.com/SiavashGolchoobian/SqlDeep/blob/main/_Documents/images/SQLDeepCircleV3_Transparent.png)
+![](https://github.com/SiavashGolchoobian/SqlDeep/blob/main/_Documents/images/SQLDeepCircleV2_Transparent_150.png)
 
-“SqlDeep.com” was started in 2019 by SQL Server experts that saw the 
-need of training and introducing new SQL and BI specialists.  
-The mission of the community is to help educate and solve real world problems for the global SQL community.
+SqlDeep tool (prevousely known as DBA tool) developed in 2013 and after few years in 2019 it's ownership was transferred to  “[sqldeep.com](https://www.sqldeep.com)” team and this product renamed to "SqlDeep tool", finally in 2021 this project was published on [github.com](https://github.com) as an open-sourced project.  
+
+
+
