@@ -1,6 +1,6 @@
 Welcome to **SqlDeep** project - the open-source tool for administrating Microsoft SQL Server databases.
 
-###### Quick navigation
+## Quick navigation
 
 | [About SqlDeep](https://github.com/SiavashGolchoobian/SqlDeep/wiki/About-SqlDeep)       | Setup Guide                                                                              | Technical Documentation                                                                     |
 |:---------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------:|
