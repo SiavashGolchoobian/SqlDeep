@@ -1,42 +1,70 @@
 SqlDeep scripts can be categorized as below
 
-
-
 # Jobs
 
-SqlDeep_ActivityMonitor
+#### SqlDeep_ActivityMonitor
 
-SqlDeep_FullBackup
+This job capture active user sessions (non sleeping) with more than 30 seconds activity after sending it's last request.
 
-SqlDeep_DiffBackup
+#### SqlDeep_FullBackup
 
-SqlDeep_LogBackup
+This job take full backup on multiple files (for performance purpose) and put it in a structured folder. Also this job deleting old backup files from specified location.
 
-SqlDeep_Reindex
+#### SqlDeep_DiffBackup
 
-SqlDeep_CheckDB
+This job take differential backup on multiple files (for performance purpose) and put it in a structured folder.
 
-SqlDeep_KillOpenSessions
+#### SqlDeep_LogBackup
 
-SqlDeep_RecycleErrorLog
+This job take log backup, put it in a structured folder and finally shrinking log file to specified value.
 
-SqlDeep_Purge_JobHistory
+#### SqlDeep_Reindex
 
-SqlDeep_ReportCleanup
+This job rebuilding and reorganizing indexes automatically and finally updating statistics.
 
-SqlDeep_TimeSyncronization
+#### SqlDeep_CheckDB
 
-SqlDeep_SetUniformExtent
+This job executing DBCC CHECKDB without locking table(s).
 
-SqlDeep_Suspected_Page_Detection
+#### SqlDeep_KillOpenSessions
 
-SqlDeep_BoostOn
+This job kill regular idle sessions and also sysadmin sessions.
 
-SqlDeep_BoostOff
+#### SqlDeep_RecycleErrorLog
 
-SqlDeep_PolicyChecks
+This job create new SQL Server error log, if it's size is more than 10MB.
 
+#### SqlDeep_Purge_JobHistory
 
+This job purging SQL Server agent history.
+
+#### SqlDeep_ReportCleanup
+
+This job removes SQL Agent reports.
+
+#### SqlDeep_TimeSyncronization
+
+This job force server to sync it self with it's NTP server.
+
+#### SqlDeep_SetUniformExtent
+
+Force user databases to use uniform extent.
+
+#### SqlDeep_Suspected_Page_Detection
+
+Detet suspected pages in database and inform admins via email notification.
+
+#### SqlDeep_BoostOn
+
+Boost-on server processing power by removing Idle state of CPU.
+
+#### SqlDeep_BoostOff
+
+Return server to normall state if it was boosted.
+
+#### SqlDeep_PolicyChecks
+
+Check pre-defined policies such as traceflags control, data file size, ... on all databases.
 
 # Alerts
 
@@ -70,8 +98,6 @@ SqlDeep_Alert_Sev24_FatalHardwareError
 
 SqlDeep_Alert_Sev25_FatalError
 
-
-
 # Extended Events
 
 SqlDeep_Capture_Deadlock
@@ -79,8 +105,6 @@ SqlDeep_Capture_Deadlock
 SqlDeep_Capture_Blocking
 
 SqlDeep_Capture_PageSplit
-
-
 
 # Policies
 
@@ -92,14 +116,4 @@ SqlDeep_CheckSameFileSize
 
 SqlDeep_CheckTraceFlags
 
-
-
 # Functions and Stored Procedures
-
-
-
-
-
-
-
-
