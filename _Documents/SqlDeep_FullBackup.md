@@ -10,27 +10,27 @@ Backup file(s) stored under folder as `<_BackupLocation>\<YYYY>_<MM>\<DD>\` patt
 
 In this patterns we have these parameters:
 
-`<_BackupLocation>`
+`_BackupLocatin`
 
 Is the root path(s) of storing all backups and specified in **[SqlDeep]** database, under database Extended Properties named "**_BackupLocation**". It can be a single path like `U:\Databases\Backup` or it can be multiple comma seperated paths like `U:\Databases\Backup,V:\Databases\Backup,W:\Databases\Backup`
 
-<YYYY>
+`YYYY`
 
 Is calendar year in four numeric character format like 2021
 
-<MM>
+`MM`
 
 Is calendar month in two numeric character format like 09
 
-<DD>
+`DD`
 
 Is calendar day in two numeric character format like 30
 
-<database name>
+`database name`
 
 Is the name of each database targeted for backup
 
-<m>of<n>
+`m of n`
 
 This job has a algorithm two split backup file to multiple files with same size for better performance, and spread these files to **<_BackupLocation>** path(s), in this patter `n` is total number of generated files and `m` is the current file number
 
