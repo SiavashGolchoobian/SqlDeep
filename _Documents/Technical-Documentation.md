@@ -2,11 +2,11 @@ SqlDeep scripts can be categorized as below
 
 # Jobs
 
-#### SqlDeep_ActivityMonitor
+#### [SqlDeep_ActivityMonitor](https://github.com/SiavashGolchoobian/SqlDeep/wiki/SqlDeep_ActivityMonitor)
 
 This job capture active user sessions (non sleeping) with more than 30 seconds activity after sending it's last request.
 
-#### SqlDeep_FullBackup
+#### [SqlDeep_FullBackup](https://github.com/SiavashGolchoobian/SqlDeep/wiki/SqlDeep_FullBackup)
 
 This job take full backup on multiple files (for performance purpose) and put it in a structured folder. Also this job deleting old backup files from specified location.
 
