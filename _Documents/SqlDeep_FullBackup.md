@@ -16,15 +16,15 @@ Is the root path(s) of storing all backups and specified in **[SqlDeep]** databa
 
 <YYYY>
 
-Is Jalali calendar year in four numeric character format like 1400
+Is calendar year in four numeric character format like 2021
 
 <MM>
 
-Is Jalali calendar month in two numeric character format like 09
+Is calendar month in two numeric character format like 09
 
 <DD>
 
-Is Jalali calendar day in two numeric character format like 30
+Is calendar day in two numeric character format like 30
 
 <database name>
 
@@ -38,39 +38,39 @@ This job has a algorithm two split backup file to multiple files with same size 
 
 In [SqlDeep] database, under "Extended Properties", the property named "_BackupLocation" has value of "U:\Databases\Backup". After executing and finishing "SqlDeep_FullBackup" job we have backup files stored on disk as below:
 
-`U:\Databases\Backup\1400_09\30\FULL_master_1400_09_30_1of1.bak`
+`U:\Databases\Backup\2021_09\30\FULL_master_2021_09_30_1of1.bak`
 
-`U:\Databases\Backup\1400_09\30\FULL_msdb_1400_09_30_1of1.bak`
+`U:\Databases\Backup\2021_09\30\FULL_msdb_2021_09_30_1of1.bak`
 
-`U:\Databases\Backup\1400_09\30\FULL_model_1400_09_30_1of1.bak`
+`U:\Databases\Backup\2021_09\30\FULL_model_2021_09_30_1of1.bak`
 
-`U:\Databases\Backup\1400_09\30\FULL_AdventureWorks_1400_09_30_1of1.bak`
+`U:\Databases\Backup\2021_09\30\FULL_AdventureWorks_2021_09_30_1of1.bak`
 
-`U:\Databases\Backup\1400_09\30\FULL_BigDatabase_1400_09_30_1of2.bak`
+`U:\Databases\Backup\2021_09\30\FULL_BigDatabase_2021_09_30_1of2.bak`
 
-`U:\Databases\Backup\1400_09\30\FULL_BigDatabase_1400_09_30_2of2.bak`
+`U:\Databases\Backup\2021_09\30\FULL_BigDatabase_2021_09_30_2of2.bak`
 
 In previouse example if "_BackupLocation" has multiple values such as "U:\Databases\Backup,V:\Databases\Backup" the result maybe something like this:
 
-`U:\Databases\Backup\1400_09\30\FULL_master_1400_09_30_1of2.bak``V:\Databases\Backup\1400_09\30\FULL_master_1400_09_30_2of2.bak`
+`U:\Databases\Backup\2021_09\30\FULL_master_2021_09_30_1of2.bak``V:\Databases\Backup\2021_09\30\FULL_master_2021_09_30_2of2.bak`
 
-`U:\Databases\Backup\1400_09\30\FULL_msdb_1400_09_30_1of2.bak`
+`U:\Databases\Backup\2021_09\30\FULL_msdb_2021_09_30_1of2.bak`
 
-`V:\Databases\Backup\1400_09\30\FULL_msdb_1400_09_30_2of2.bak`
+`V:\Databases\Backup\2021_09\30\FULL_msdb_2021_09_30_2of2.bak`
 
-`U:\Databases\Backup\1400_09\30\FULL_model_1400_09_30_1of2.bak`
+`U:\Databases\Backup\2021_09\30\FULL_model_2021_09_30_1of2.bak`
 
-`V:\Databases\Backup\1400_09\30\FULL_model_1400_09_30_2of2.bak`
+`V:\Databases\Backup\2021_09\30\FULL_model_2021_09_30_2of2.bak`
 
-`U:\Databases\Backup\1400_09\30\FULL_AdventureWorks_1400_09_30_1of2.bak``V:\Databases\Backup\1400_09\30\FULL_AdventureWorks_1400_09_30_2of2.bak`
+`U:\Databases\Backup\2021_09\30\FULL_AdventureWorks_2021_09_30_1of2.bak``V:\Databases\Backup\2021_09\30\FULL_AdventureWorks_2021_09_30_2of2.bak`
 
-`U:\Databases\Backup\1400_09\30\FULL_BigDatabase_1400_09_30_1of4.bak`
+`U:\Databases\Backup\2021_09\30\FULL_BigDatabase_2021_09_30_1of4.bak`
 
-`V:\Databases\Backup\1400_09\30\FULL_BigDatabase_1400_09_30_2of4.bak`
+`V:\Databases\Backup\2021_09\30\FULL_BigDatabase_2021_09_30_2of4.bak`
 
-`U:\Databases\Backup\1400_09\30\FULL_BigDatabase_1400_09_30_3of4.bak`
+`U:\Databases\Backup\2021_09\30\FULL_BigDatabase_2021_09_30_3of4.bak`
 
-`V:\Databases\Backup\1400_09\30\FULL_BigDatabase_1400_09_30_4of4.bak`
+`V:\Databases\Backup\2021_09\30\FULL_BigDatabase_2021_09_30_4of4.bak`
 
 ### See Also
 
