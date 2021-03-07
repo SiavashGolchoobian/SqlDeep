@@ -7,7 +7,7 @@ GO
 -- =============================================
 -- Author:		<Golchoobian>
 -- Create date: <1/25/2015>
--- Version:		<3.0.0.4>
+-- Version:		<3.0.0.5>
 -- Description:	<Backup database>
 -- Input Parameters:
 --	@DatabaseNames:				'<ALL_USER_DATABASES>' or '<ALL_SYSTEM_DATABASES>' or '<ALL_DATABASES>' or 'dbname1,dbname2,...,dbnameN'
@@ -17,7 +17,7 @@ GO
 --	@RetainDays:				any int number
 --	@SplitThresholdSizeGB:		NULL,Negative,0 or any POSITIVE bigint value in GB scale //Take backup on multiple files if estimated DB\Log Backup size is over @SplitThresholdSizeGB also you can use NULL or 0 or any Negative value if you want one backup file in any situation
 --	@DiffOrLogThresholdSizeGB:	NULL,0 or any POSITIVE bigint value in GB scale //Take Diff/Log backup if Data/Log chnaged size from previous backup is greater than or equal to this parameter else ignore backup process
---	@BackupFileNamingType:		'DATE' or 'DATETIME', if 'DATETIME' is used, this SP will add #Time value to backup file name else only use #Date value for backup file name.
+--	@BackupFileNamingType:		'DATE' or 'DATETIME' or 'JDATE' or 'JDATETIME', if 'DATETIME' is used, this SP will add #Time value to backup file name else only use #Date value for backup file name. JDATE and JDATETIME is same as DAT and DATETIME rule but use Jalali calendar instead of Gregorian calendar
 --	@PrintOnly:					0 or 1
 -- =============================================
 CREATE PROCEDURE [dbo].[dbasp_maintenance_take_backup]
@@ -51,7 +51,7 @@ BEGIN
 	DECLARE @myDatabase_FileSizeGB BIGINT;
 	DECLARE @myDatabase_BackupFileCount DECIMAL(7,2);
 	DECLARE @myDatabase_BackupDestinationCount INT;
-	DECLARE @myPersian_Date nvarchar(10);
+	DECLARE @myCalendar_Date nvarchar(10);
 	DECLARE @myGregorian_Date datetime;
 	DECLARE @myTime Time(0);
 	DECLARE @myTimeChar nvarchar(8);
@@ -86,7 +86,7 @@ BEGIN
 	SET @myVerifiedBackupCount=0;								--Equal to @BackupRequestsCount is OK else is Error
 	SET @SplitThresholdSizeGB=CASE WHEN ISNULL(@SplitThresholdSizeGB,-1)<=0 THEN -1 ELSE @SplitThresholdSizeGB END
 	SET @myNormalCompressionRate=2.499;
-	SET @myIsCompressionEnabled = ISNULL((SELECT CAST([myConfig].[value] AS BIT) FROM sys.configurations AS myConfig  WHERE [myConfig].[name] = N'backup compression default'),0)	--Determin Default behaviour of Backup Compression
+	SET @myIsCompressionEnabled = ISNULL((SELECT CAST([myConfig].[value] AS BIT) FROM [sys].[configurations] AS myConfig  WHERE [myConfig].[name] = N'backup compression default'),0)	--Determin Default behaviour of Backup Compression
 	SET @BackupFileNamingType=UPPER(@BackupFileNamingType);
 	--=====Prerequisites Control
 	IF NOT EXISTS (SELECT 1 FROM [dbo].[dbafn_split](N',',@LocalDestinationPath) AS myList WHERE [myList].[Parameter] IS NOT NULL AND LEN(RTRIM(LTRIM([myList].[Parameter])))>0)
@@ -126,8 +126,11 @@ BEGIN
 			SET @myGregorian_Date=GETDATE();																				--Calculate current gregorian date
 			SET @myTime = CAST(@myGregorian_Date as Time(0))
 			SET @myTimeChar = REPLACE(@myTime,':','_')
-			SET @myPersian_Date = [dbo].[dbafn_miladi2shamsi] (@myGregorian_Date,N'_');										--Calculate current persian date
-			SET @myFolderDate = Left(@myPersian_Date,7) + N'\' + Right(@myPersian_Date,2);									--Calculate required sub directories under @Backup_Base structure for storing backup files			
+			SET @myCalendar_Date = CASE 
+									WHEN @BackupFileNamingType IN (N'JDATE','JDATETIME') THEN [dbo].[dbafn_miladi2shamsi] (@myGregorian_Date,N'_')		--Calculate current persian or gregorian date
+									ELSE CAST(DATEPART(YEAR,@myGregorian_Date) AS NVARCHAR(10)) + N'_' + CASE WHEN DATEPART(MONTH,@myGregorian_Date)<10 THEN N'0' ELSE N'' END + CAST(DATEPART(MONTH,@myGregorian_Date) AS NVARCHAR(10)) + N'_' +  CASE WHEN DATEPART(DAY,@myGregorian_Date)<10 THEN N'0' ELSE N'' END  + CAST(DATEPART(DAY,@myGregorian_Date) AS NVARCHAR(10))		--Calculate current persian or gregorian date
+								  END;
+			SET @myFolderDate = Left(@myCalendar_Date,7) + N'\' + Right(@myCalendar_Date,2);									--Calculate required sub directories under @Backup_Base structure for storing backup files			
 			SET @myEstimatedBackupSize = NULL;
 			SET @myEstimatedCompressedBackupSize = NULL;
 			SET @myEstimatedCompressionRate = @myNormalCompressionRate;
@@ -258,12 +261,12 @@ BEGIN
 					IF @myIterator02=@myIterator01
 						EXECUTE [dbo].dbasp_make_directory @myNewFolder;
 										--Calculate full path of backupfile location (in local disk)
-					SET @myBackupDisks=@myBackupDisks + CAST(N'DISK=N''' + @myNewFolder + N'\' + UPPER(@BackupType) +N'_'+ @myDatabase_Name + N'_' + @myPersian_Date + (CASE @BackupFileNamingType WHEN N'DATETIME' THEN '_on_'+ @myTimeChar ELSE N'' END) + N'_' + CAST(@myIterator01 AS NVARCHAR(MAX)) + N'of' + CAST(CAST(@myDatabase_BackupFileCount AS BIGINT) AS NVARCHAR(MAX)) + N'.' + @BackupExtension + N''','  AS NVARCHAR(MAX))
+					SET @myBackupDisks=@myBackupDisks + CAST(N'DISK=N''' + @myNewFolder + N'\' + UPPER(@BackupType) +N'_'+ @myDatabase_Name + N'_' + @myCalendar_Date + (CASE WHEN @BackupFileNamingType IN (N'DATETIME',N'JDATETIME') THEN '_on_'+ @myTimeChar ELSE N'' END) + N'_' + CAST(@myIterator01 AS NVARCHAR(MAX)) + N'of' + CAST(CAST(@myDatabase_BackupFileCount AS BIGINT) AS NVARCHAR(MAX)) + N'.' + @BackupExtension + N''','  AS NVARCHAR(MAX))
 					SET @myIterator01=@myIterator01+1
 					SET @myIterator02=@myIterator02+1
 					SET @myIterator02=CASE WHEN @myIterator02>@myDatabase_BackupDestinationCount THEN 1 ELSE @myIterator02 END
 				END
-				SET @myMediaSet_Name=UPPER(@BackupType) +N'_'+ @myDatabase_Name + N'_' + @myPersian_Date + (CASE @BackupFileNamingType WHEN N'DATETIME' THEN '_on_'+ @myTimeChar ELSE N'' END)
+				SET @myMediaSet_Name=UPPER(@BackupType) +N'_'+ @myDatabase_Name + N'_' + @myCalendar_Date + (CASE WHEN @BackupFileNamingType IN (N'DATETIME',N'JDATETIME') THEN '_on_'+ @myTimeChar ELSE N'' END)
 				SET @myBackupDisks=CASE RIGHT(@myBackupDisks,1) WHEN N',' THEN LEFT(@myBackupDisks,LEN(@myBackupDisks)-1) ELSE @myBackupDisks END
 				DROP TABLE #myDestinationTable
 
@@ -368,7 +371,7 @@ BEGIN
 					------------------------------
 						--Config parameters
 						SET @myMediaSet_Desc=@myMediaSet_Name 																						--Set mediaset description as mediaset name
-						SET @myBackupSet_Name=@myMediaSet_Name + (CASE @BackupFileNamingType WHEN N'DATE' THEN '_on_' + @myTimeChar ELSE N'' END)	--Specify backupset name default value, the default value is a Full backup (Ex: Full_Kasra_1392_10_01)
+						SET @myBackupSet_Name=@myMediaSet_Name + (CASE WHEN @BackupFileNamingType IN (N'DATETIME',N'JDATETIME') THEN '_on_' + @myTimeChar ELSE N'' END)	--Specify backupset name default value, the default value is a Full backup (Ex: Full_Kasra_1392_10_01)
 						SET @myBackupSet_Desc=@myBackupSet_Name																						--Set backupset description as backupset name
 				
 						--Generate information about backup
@@ -434,7 +437,7 @@ BEGIN
 					------------------------------
 						--Config parameters
 						SET @myMediaSet_Desc=@myMediaSet_Name																						--Set mediaset description as mediaset name
-						SET @myBackupSet_Name=@myMediaSet_Name + (CASE @BackupFileNamingType WHEN N'DATE' THEN '_on_' + @myTimeChar ELSE N'' END)	--Specify backupset name default value, the default value is a Full backup (Ex: Full_Kasra_1392_10_01)
+						SET @myBackupSet_Name=@myMediaSet_Name + (CASE WHEN @BackupFileNamingType IN (N'DATETIME',N'JDATETIME') THEN '_on_' + @myTimeChar ELSE N'' END)	--Specify backupset name default value, the default value is a Full backup (Ex: Full_Kasra_1392_10_01)
 						SET @myBackupSet_Desc=@myBackupSet_Name																						--Set backupset description as backupset name
 
 						--Generate information about backup
@@ -500,7 +503,7 @@ BEGIN
 					------------------------------
 						--Config parameters
 						SET @myMediaSet_Desc=@myMediaSet_Name																						--Set mediaset description as mediaset name
-						SET @myBackupSet_Name=@myMediaSet_Name + (CASE @BackupFileNamingType WHEN N'DATE' THEN '_on_' + @myTimeChar ELSE N'' END)	--Specify backupset name default value, the default value is a Full backup (Ex: Full_Kasra_1392_10_01)
+						SET @myBackupSet_Name=@myMediaSet_Name + (CASE WHEN @BackupFileNamingType IN (N'DATETIME',N'JDATETIME') THEN '_on_' + @myTimeChar ELSE N'' END)	--Specify backupset name default value, the default value is a Full backup (Ex: Full_Kasra_1392_10_01)
 						SET @myBackupSet_Desc=@myBackupSet_Name																						--Set backupset description as backupset name
 
 						--Generate information about backup
@@ -587,7 +590,7 @@ EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'dbo',
 GO
 EXEC sp_addextendedproperty N'Created Date', N'2015-01-25', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_take_backup', NULL, NULL
 GO
-EXEC sp_addextendedproperty N'Modified Date', N'2019-08-11', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_take_backup', NULL, NULL
+EXEC sp_addextendedproperty N'Modified Date', N'2021-03-07', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_take_backup', NULL, NULL
 GO
-EXEC sp_addextendedproperty N'Version', N'3.0.0.4', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_take_backup', NULL, NULL
+EXEC sp_addextendedproperty N'Version', N'3.0.0.5', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_take_backup', NULL, NULL
 GO
