@@ -4,10 +4,11 @@ SET ANSI_NULLS ON
 GO
 
 
+
 -- =============================================
 -- Author:		<Siavash Golchoobian>
 -- Create date: <6/10/2017>
--- Version:		<3.0.0.0>
+-- Version:		<3.0.0.1>
 -- Description:	<Truncate single table data also if referenced by other table, truncate that tables too>
 -- Input Parameters:
 --	@DatabaseName:	database name
@@ -34,10 +35,20 @@ BEGIN
 	SET @mySQLScript=@mySQLScript+
 		CAST(
 		@myNewLine+ N'USE '+ CAST(QUOTENAME(@Database_Name) AS NVARCHAR(MAX)) + N';'+
-		@myNewLine+	N'CREATE TABLE #DropConstarint (ID int IDENTITY, SQLStatement nvarchar(max));'+
-		@myNewLine+	N'INSERT INTO #DropConstarint (SQLStatement)'+
+		@myNewLine+	N'IF OBJECT_ID('''+@SchemaName+N'.'+@TableName+''') IS NULL'+
+		@myNewLine+	N'BEGIN'+
+		@myNewLine+	N'	RAISERROR (''Specified table object not exists.'',11,1)'+
+		@myNewLine+	N'	RETURN'+
+		@myNewLine+	N'END'+
+		@myNewLine+	N''+
+		@myNewLine+	N'CREATE TABLE #DropConstarint (ID int IDENTITY, SQLStatement nvarchar(max), SchemaName sysname, TableName sysname, FkName sysname);'+
+		@myNewLine+	N'INSERT INTO #DropConstarint (SQLStatement,SchemaName,TableName,FkName)'+
 		@myNewLine+	N'	SELECT'+
-		@myNewLine+	N'		''ALTER TABLE '' + QUOTENAME(myChildSchemas.name) + ''.'' + QUOTENAME(myChildTables.name) + '' DROP CONSTRAINT '' + QUOTENAME(myFkeys.name) '+
+		@myNewLine+	N'		''IF EXISTS(SELECT 1 FROM [sys].[foreign_keys] AS myFkeys INNER JOIN [sys].[tables] AS myChildTables ON [myFkeys].[parent_object_id]=[myChildTables].[object_id] INNER JOIN [sys].[schemas] AS myChildSchemas ON [myChildTables].[schema_id]=[myChildSchemas].[schema_id] WHERE [myChildSchemas].[Name]=''''''+ myChildSchemas.name +'''''' AND [myChildTables].[Name]= ''''''+myChildTables.name+'''''' AND [myFkeys].[name]=''''''+myFkeys.name+'''''')''+ '+
+		@myNewLine+	N'		''ALTER TABLE '' + QUOTENAME(myChildSchemas.name) + ''.'' + QUOTENAME(myChildTables.name) + '' DROP CONSTRAINT '' + QUOTENAME(myFkeys.name) ,'+
+		@myNewLine+	N'		myChildSchemas.name,'+
+		@myNewLine+	N'		myChildTables.name,'+
+		@myNewLine+	N'		myFkeys.name'+
 		@myNewLine+	N'	FROM'+
 		@myNewLine+	N'		sys.foreign_keys AS myFkeys '+
 		@myNewLine+	N'		INNER JOIN sys.TABLES AS myChildTables ON myFkeys.parent_object_id=myChildTables.object_id '+
@@ -54,10 +65,13 @@ BEGIN
 	SET @mySQLScript=@mySQLScript+
 		CAST(
 		@myNewLine+ N'USE '+ CAST(QUOTENAME(@Database_Name) AS NVARCHAR(MAX)) + N';'+
-		@myNewLine+	N'CREATE TABLE #TruncateTable (ID int IDENTITY, SQLStatement nvarchar(max));'+
-		@myNewLine+	N'INSERT INTO #TruncateTable (SQLStatement)'+
+		@myNewLine+	N'CREATE TABLE #TruncateTable (ID int IDENTITY, SQLStatement nvarchar(max), SchemaName sysname, TableName sysname);'+
+		@myNewLine+	N'INSERT INTO #TruncateTable (SQLStatement,SchemaName,TableName)'+
 		@myNewLine+	N'	SELECT'+
-		@myNewLine+	N'		''TRUNCATE TABLE '' + QUOTENAME(mySchemas.name) + ''.'' + QUOTENAME(myTables.name) '+
+		@myNewLine+	N'		''IF EXISTS (SELECT 1 FROM '' + QUOTENAME(mySchemas.name) + ''.'' + QUOTENAME(myTables.name) + '') ''+ '+
+		@myNewLine+	N'		''TRUNCATE TABLE '' + QUOTENAME(mySchemas.name) + ''.'' + QUOTENAME(myTables.name), '+
+		@myNewLine+	N'		mySchemas.name,'+
+		@myNewLine+	N'		myTables.name'+
 		@myNewLine+	N'	FROM'+
 		@myNewLine+	N'		sys.TABLES AS myTables '+
 		@myNewLine+	N'		INNER JOIN sys.schemas AS mySchemas ON myTables.schema_id=mySchemas.schema_id '+
@@ -67,7 +81,9 @@ BEGIN
 		@myNewLine+	N'		AND [myTables].[name]='''+@TableName+''''+
 		@myNewLine+	N'	UNION'+
 		@myNewLine+	N'	SELECT DISTINCT'+
-		@myNewLine+	N'		''TRUNCATE TABLE '' + QUOTENAME(myBaseSchemas.name) + ''.'' + QUOTENAME(myBaseTables.name) '+
+		@myNewLine+	N'		''TRUNCATE TABLE '' + QUOTENAME(myBaseSchemas.name) + ''.'' + QUOTENAME(myBaseTables.name), '+
+		@myNewLine+	N'		myBaseSchemas.name,'+
+		@myNewLine+	N'		myBaseTables.name'+
 		@myNewLine+	N'	FROM'+
 		@myNewLine+	N'		sys.foreign_keys AS myFkeys '+
 		@myNewLine+	N'		INNER JOIN sys.TABLES AS myBaseTables ON myFkeys.parent_object_id=myBaseTables.object_id '+
@@ -84,9 +100,10 @@ BEGIN
 	SET @mySQLScript=@mySQLScript+
 		CAST(
 		@myNewLine+ N'USE '+ CAST(QUOTENAME(@Database_Name) AS NVARCHAR(MAX)) + N';'+
-		@myNewLine+	N'CREATE TABLE #CreateConstarint (ID int IDENTITY, SQLStatement nvarchar(max));'+
-		@myNewLine+	N'INSERT INTO #CreateConstarint (SQLStatement)'+
+		@myNewLine+	N'CREATE TABLE #CreateConstarint (ID int IDENTITY, SQLStatement nvarchar(max), SchemaName sysname, TableName sysname, FkName sysname);'+
+		@myNewLine+	N'INSERT INTO #CreateConstarint (SQLStatement,SchemaName,TableName,FkName)'+
 		@myNewLine+	N'	SELECT'+
+		@myNewLine+	N'		''IF NOT EXISTS(SELECT 1 FROM [sys].[foreign_keys] AS myFkeys INNER JOIN [sys].[tables] AS myChildTables ON [myFkeys].[parent_object_id]=[myChildTables].[object_id] INNER JOIN [sys].[schemas] AS myChildSchemas ON [myChildTables].[schema_id]=[myChildSchemas].[schema_id] WHERE [myChildSchemas].[Name]=''''''+ myBaseSchemas.name +'''''' AND [myChildTables].[Name]= ''''''+myBaseTables.name+'''''' AND [myFkeys].[name]=''''''+myFk.name+'''''')''+ '+
 		@myNewLine+	N'		''ALTER TABLE '' + QUOTENAME(myBaseSchemas.name) + ''.'' + QUOTENAME(myBaseTables.name) + '+
 		@myNewLine+	N'		''	WITH '' + CASE [myFk].[is_not_trusted] WHEN 1 THEN N''NOCHECK'' ELSE N''CHECK'' END + '+
 		@myNewLine+	N'		''	ADD CONSTRAINT '' + QUOTENAME(myFk.name) + '+
@@ -110,7 +127,10 @@ BEGIN
 		@myNewLine+	N'		 				1,2,'''') + '+
 		@myNewLine+	N'		 			   '')'' + '+
 		@myNewLine+	N'		 ''	ON DELETE '' + REPLACE(myFk.delete_referential_action_desc, ''_'', '' '')  + '+
-		@myNewLine+	N'		 ''	ON UPDATE '' + REPLACE(myFk.update_referential_action_desc , ''_'', '' '') COLLATE database_default '+
+		@myNewLine+	N'		 ''	ON UPDATE '' + REPLACE(myFk.update_referential_action_desc , ''_'', '' '') COLLATE database_default ,'+
+		@myNewLine+	N'		myBaseSchemas.name,'+
+		@myNewLine+	N'		myBaseTables.name,'+
+		@myNewLine+	N'		myFk.name'+
 		@myNewLine+	N'	FROM'+
 		@myNewLine+	N'		sys.foreign_keys AS myFk '+
 		@myNewLine+	N'		INNER JOIN sys.TABLES AS myBaseTables ON myFk.parent_object_id=myBaseTables.object_id '+
@@ -213,12 +233,12 @@ BEGIN
 		CAST(
 		CAST(CASE WHEN @PrintOnly=1 THEN @myNewLine+N'*/' ELSE N'' END AS NVARCHAR(MAX)) +	--for Print only Command, Comment execution
 		CAST(CASE WHEN @PrintOnly=1 THEN 
-									@myNewLine+N'SELECT NULL AS [Id],''------------- Drop Constraints'' AS [Command] UNION ALL ' +
-									@myNewLine+N'SELECT ID,SQLStatement FROM #DropConstarint UNION ALL ' +
-									@myNewLine+N'SELECT NULL,''------------- Truncate Tables'' UNION ALL ' +
-									@myNewLine+N'SELECT ID,SQLStatement FROM #TruncateTable UNION ALL ' +
-									@myNewLine+N'SELECT NULL,''------------- ReCreate Constraints'' UNION ALL ' +
-									@myNewLine+N'SELECT ID,SQLStatement FROM #CreateConstarint ;'
+									@myNewLine+N'SELECT NULL AS [Id],''------------- Drop Constraints'' AS [Command], NULL AS [SchemaName], NULL AS [TableName], NULL  AS [FkName] UNION ALL ' +
+									@myNewLine+N'SELECT ID,SQLStatement,SchemaName,TableName,FkName FROM #DropConstarint UNION ALL ' +
+									@myNewLine+N'SELECT NULL,''------------- Truncate Tables'',NULL,NULL,NULL UNION ALL ' +
+									@myNewLine+N'SELECT ID,SQLStatement,SchemaName,TableName,NULL FROM #TruncateTable UNION ALL ' +
+									@myNewLine+N'SELECT NULL,''------------- ReCreate Constraints'',NULL,NULL,NULL UNION ALL ' +
+									@myNewLine+N'SELECT ID,SQLStatement,SchemaName,TableName,FkName FROM #CreateConstarint ;'
 								ELSE N'' END AS NVARCHAR(MAX)) +	--for Print only Command, Return commands list
 		@myNewLine+	N'DROP TABLE #DropConstarint; '+
 		@myNewLine+	N'DROP TABLE #TruncateTable; '+
