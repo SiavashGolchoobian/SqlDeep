@@ -3,38 +3,39 @@ GO
 SET ANSI_NULLS ON
 GO
 
-
-
 -- =============================================
 -- Author:		<Siavash Golchoobian>
 -- Create date: <6/10/2017>
--- Version:		<3.0.0.1>
--- Description:	<Truncate single table data also if referenced by other table, truncate that tables too>
+-- Version:		<3.0.0.3>
+-- Description:	<Truncate single table data also if referenced by other table(s), truncate that table(s) too>
 -- Input Parameters:
 --	@DatabaseName:	database name
 --	@SchemaName:	table schema name
 --	@TableName:		table name
+--	@RetryCount:	number of retry after truncation failur
 --	@PrintOnly:		0 or 1
 -- =============================================
 CREATE PROCEDURE [dbo].[dbasp_truncate_single_table]
 	@DatabaseName sysname,
 	@SchemaName sysname,
 	@TableName sysname,
+	@RetryCount SMALLINT = 5,
 	@PrintOnly BIT=0
-
 AS
 BEGIN
 	SET NOCOUNT ON;
-	DECLARE @Database_Name nvarchar(255);
 	DECLARE @mySQLScript NVARCHAR(max);
 	DECLARE @myNewLine nvarchar(10);
 	
+	IF @RetryCount<1
+		SET @RetryCount=1
+	IF @DatabaseName IS NULL
+		SET @DatabaseName=DB_NAME()
 	SET @myNewLine=CHAR(13)+CHAR(10)
-	SET @Database_Name=DB_NAME()
 	SET @mySQLScript=CAST(N'' AS NVARCHAR(MAX))
 	SET @mySQLScript=@mySQLScript+
 		CAST(
-		@myNewLine+ N'USE '+ CAST(QUOTENAME(@Database_Name) AS NVARCHAR(MAX)) + N';'+
+		@myNewLine+ N'USE '+ CAST(QUOTENAME(@DatabaseName) AS NVARCHAR(MAX)) + N';'+
 		@myNewLine+	N'IF OBJECT_ID('''+@SchemaName+N'.'+@TableName+''') IS NULL'+
 		@myNewLine+	N'BEGIN'+
 		@myNewLine+	N'	RAISERROR (''Specified table object not exists.'',11,1)'+
@@ -86,7 +87,7 @@ BEGIN
 
 	SET @mySQLScript=@mySQLScript+
 		CAST(
-		@myNewLine+ N'USE '+ CAST(QUOTENAME(@Database_Name) AS NVARCHAR(MAX)) + N';'+
+		@myNewLine+ N'USE '+ CAST(QUOTENAME(@DatabaseName) AS NVARCHAR(MAX)) + N';'+
 		@myNewLine+	N'CREATE TABLE #TruncateTable (ID int IDENTITY, SQLStatement nvarchar(max), SchemaName sysname, TableName sysname, DependencyLevel int);'+
 		@myNewLine+	N';With myTruncateTable AS ('+
 		@myNewLine+	N'	SELECT'+
@@ -126,7 +127,7 @@ BEGIN
 			
 	SET @mySQLScript=@mySQLScript+
 		CAST(
-		@myNewLine+ N'USE '+ CAST(QUOTENAME(@Database_Name) AS NVARCHAR(MAX)) + N';'+
+		@myNewLine+ N'USE '+ CAST(QUOTENAME(@DatabaseName) AS NVARCHAR(MAX)) + N';'+
 		@myNewLine+	N'CREATE TABLE #CreateConstarint (ID int IDENTITY, SQLStatement nvarchar(max), SchemaName sysname, TableName sysname, FkName sysname, DependencyLevel int);'+
 		@myNewLine+	N';With myCreateConstarint AS ('+
 		@myNewLine+	N'	SELECT'+
@@ -218,135 +219,72 @@ BEGIN
 		CAST(
 		CAST(CASE WHEN @PrintOnly=1 THEN @myNewLine+N'/*' ELSE N'' END AS NVARCHAR(MAX)) +	--for Print only Command, Comment execution
 		@myNewLine+ N'DECLARE @mySQLStatement NVARCHAR(max);'+
-		@myNewLine+ N'DECLARE @myCursor_DC Cursor;'+
-		@myNewLine+ N'DECLARE @myCursor_TT Cursor;'+
-		@myNewLine+ N'DECLARE @myCursor_CC Cursor;'+
+		@myNewLine+ N'DECLARE @myCursor Cursor;'+
+		@myNewLine+ N'DECLARE @myTransactionResult BIT;'+
 		@myNewLine+ N'DECLARE @myDeadlockretries INT;'+
-		@myNewLine+ N'DECLARE @myDeadlockWait nvarchar(8);'+
+		@myNewLine+ N'DECLARE @myDeadlockWait nvarchar(15);'+
 		@myNewLine+ N'DECLARE @CustomMessage1 nvarchar(255)'+
 		@myNewLine+ N''+
-		@myNewLine+ N'SET @myCursor_DC=CURSOR For'+
-		@myNewLine+	N'	SELECT SQLStatement FROM #DropConstarint ORDER BY ID;'+
-		@myNewLine+ N''+
-		@myNewLine+ N'PRINT ''Current database is '+ @Database_Name + N''';' +
-		@myNewLine+ N'PRINT ''------------- Drop Constraints'';' +
-		@myNewLine+ N'Open @myCursor_DC'+
-		@myNewLine+ N'	FETCH NEXT FROM @myCursor_DC INTO @mySQLStatement'+
+		@myNewLine+ N'PRINT ''Current database is '+ @DatabaseName + N''';' +
+		@myNewLine+ N'PRINT ''------------- Execute Commands'';' +
+		@myNewLine+ N'SET @myTransactionResult=0;' +
+		@myNewLine+ N'SET @myDeadlockretries = '+ CAST(@RetryCount AS NVARCHAR(5)) +';' +
+		@myNewLine+ N'WHILE (@myDeadlockretries > 0)' +
+		@myNewLine+ N'BEGIN' +
+		@myNewLine+ N'	PRINT N''Try '' + CAST(@myDeadlockretries AS NVARCHAR(5))' +
+		@myNewLine+ N'	BEGIN TRANSACTION SqlDeepTrun	--Open transacton for whole truncation process' +
+		@myNewLine+ N'	BEGIN TRY' +
+		@myNewLine+ N'		SET @myCursor=CURSOR FAST_FORWARD For' +
+		@myNewLine+	N'			SELECT'+
+		@myNewLine+	N'				mySource.SQLStatement'+
+		@myNewLine+	N'			FROM'+
+		@myNewLine+	N'				('+
+		@myNewLine+	N'				SELECT 1 AS CommandPriority, SQLStatement, ROW_NUMBER() OVER (ORDER BY ID) As myOrder FROM #DropConstarint'+
+		@myNewLine+	N'				UNION ALL'+
+		@myNewLine+	N'				SELECT 2 AS CommandPriority, SQLStatement, ROW_NUMBER() OVER (ORDER BY ID) As myOrder FROM #TruncateTable'+
+		@myNewLine+	N'				UNION ALL'+
+		@myNewLine+	N'				SELECT 3 AS CommandPriority, SQLStatement, ROW_NUMBER() OVER (ORDER BY ID) As myOrder FROM #CreateConstarint'+
+		@myNewLine+	N'				) AS mySource'+
+		@myNewLine+	N'			ORDER BY'+
+		@myNewLine+	N'				mySource.CommandPriority,mySource.myOrder;'+
+		@myNewLine+ N'		Open @myCursor FETCH NEXT FROM @myCursor INTO @mySQLStatement'+
 		@myNewLine+ N'		WHILE @@FETCH_STATUS=0'+
 		@myNewLine+ N'		BEGIN'+
-		@myNewLine+ N'			SET @myDeadlockretries = 5'+
-		@myNewLine+ N'			WHILE (@myDeadlockretries > 0) '+
-		@myNewLine+ N'			BEGIN'+
-		@myNewLine+ N'				BEGIN TRY'+
-		@myNewLine+ N'					PRINT N''Executing ('' + CAST(getdate() as nvarchar(50)) + ''):	'' + @mySQLStatement;'+
-		@myNewLine+ N'					EXEC (@mySQLStatement);'+
-		@myNewLine+ N'					SET @myDeadlockretries = 0'+
-		@myNewLine+ N'				END TRY'+
-		@myNewLine+ N'				BEGIN CATCH'+
-		@myNewLine+ N'					IF (ERROR_NUMBER() = 1205) -- its a deadlock exception - 1205'+
-		@myNewLine+ N'					BEGIN'+
-		@myNewLine+ N'						Print ''Deadlock occured - retrying ...'''+
-		@myNewLine+ N'						SET @myDeadlockretries = @myDeadlockretries - 1 '+
-		@myNewLine+ N'						SET @myDeadlockWait = ''00:00:''+CAST(FLOOR(RAND()*(20-2+1))+2 AS NVARCHAR(8));'+
-		@myNewLine+ N'						WAITFOR DELAY @myDeadlockWait	-- Wait for 1 ms'+
-		@myNewLine+ N'					END'+
-		@myNewLine+ N'					ELSE'+
-		@myNewLine+ N'					BEGIN'+
-		@myNewLine+ N'						SET @CustomMessage1=''Drop Constraint error on '+@Database_Name+N'''' +
-		@myNewLine+ N'						EXECUTE [SqlDeep].[dbo].[dbasp_get_error_info] @CustomMessage1,1,0,1,0,NULL'+
-		@myNewLine+ N'						SET @myDeadlockretries = 0'+
-		@myNewLine+ N'					END'+
-		@myNewLine+ N'				END CATCH'+
-		@myNewLine+ N'			END'+
-		@myNewLine+ N''+
-		@myNewLine+ N'			FETCH NEXT FROM @myCursor_DC INTO @mySQLStatement'+
+		@myNewLine+ N'			PRINT N''Executing ('' + CAST(getdate() as nvarchar(50)) + ''):	'' + @mySQLStatement;'+
+		@myNewLine+ N'			EXEC (@mySQLStatement);'+
+		@myNewLine+ N'			FETCH NEXT FROM @myCursor INTO @mySQLStatement'+
 		@myNewLine+ N'		END '+
-		@myNewLine+ N'CLOSE @myCursor_DC; '+
-		@myNewLine+ N'DEALLOCATE @myCursor_DC; '+
-		@myNewLine+ N''
-		AS NVARCHAR(MAX))
-
-	SET @mySQLScript=@mySQLScript+
-		CAST(
-		@myNewLine+ N'SET @myCursor_TT=CURSOR For'+
-		@myNewLine+	N'	SELECT SQLStatement FROM #TruncateTable ORDER BY DependencyLevel DESC, ID;'+
+		@myNewLine+ N'		CLOSE @myCursor; '+
+		@myNewLine+ N'		DEALLOCATE @myCursor; '+
 		@myNewLine+ N''+
-		@myNewLine+ N'PRINT ''------------- Truncate Tables'';' +
-		@myNewLine+ N'Open @myCursor_TT'+
-		@myNewLine+ N'	FETCH NEXT FROM @myCursor_TT INTO @mySQLStatement'+
-		@myNewLine+ N'		WHILE @@FETCH_STATUS=0'+
-		@myNewLine+ N'		BEGIN'+
-		@myNewLine+ N'			SET @myDeadlockretries = 5'+
-		@myNewLine+ N'			WHILE (@myDeadlockretries > 0) '+
-		@myNewLine+ N'			BEGIN'+
-		@myNewLine+ N'				BEGIN TRY'+
-		@myNewLine+ N'					PRINT N''Executing ('' + CAST(getdate() as nvarchar(50)) + ''):	'' + @mySQLStatement;'+
-		@myNewLine+ N'					EXEC (@mySQLStatement);'+
-		@myNewLine+ N'					SET @myDeadlockretries = 0'+
-		@myNewLine+ N'				END TRY'+
-		@myNewLine+ N'				BEGIN CATCH'+
-		@myNewLine+ N'					IF (ERROR_NUMBER() = 1205) -- its a deadlock exception - 1205'+
-		@myNewLine+ N'					BEGIN'+
-		@myNewLine+ N'						Print ''Deadlock occured - retrying ...'''+
-		@myNewLine+ N'						SET @myDeadlockretries = @myDeadlockretries - 1 '+
-		@myNewLine+ N'						SET @myDeadlockWait = ''00:00:''+CAST(FLOOR(RAND()*(20-2+1))+2 AS NVARCHAR(8));'+
-		@myNewLine+ N'						WAITFOR DELAY @myDeadlockWait	-- Wait for 1 ms'+
-		@myNewLine+ N'					END'+
-		@myNewLine+ N'					ELSE'+
-		@myNewLine+ N'					BEGIN'+
-		@myNewLine+ N'						SET @CustomMessage1=''Truncate Table error on '+@Database_Name+N'''' +
-		@myNewLine+ N'						EXECUTE [SqlDeep].[dbo].[dbasp_get_error_info] @CustomMessage1,1,0,1,0,NULL'+
-		@myNewLine+ N'						SET @myDeadlockretries = 0'+
-		@myNewLine+ N'					END'+
-		@myNewLine+ N'				END CATCH'+
-		@myNewLine+ N'			END'+
-		@myNewLine+ N''+
-		@myNewLine+ N'			FETCH NEXT FROM @myCursor_TT INTO @mySQLStatement'+
-		@myNewLine+ N'		END '+
-		@myNewLine+ N'CLOSE @myCursor_TT; '+
-		@myNewLine+ N'DEALLOCATE @myCursor_TT; '+
-		@myNewLine+ N''
-		AS NVARCHAR(MAX))
-
-	SET @mySQLScript=@mySQLScript+
-		CAST(
-		@myNewLine+ N'SET @myCursor_CC=CURSOR For'+
-		@myNewLine+	N'	SELECT SQLStatement FROM #CreateConstarint ORDER BY ID;'+
-		@myNewLine+ N''+
-		@myNewLine+ N'PRINT ''------------- ReCreate Constraints'';' +
-		@myNewLine+ N'Open @myCursor_CC'+
-		@myNewLine+ N'	FETCH NEXT FROM @myCursor_CC INTO @mySQLStatement'+
-		@myNewLine+ N'		WHILE @@FETCH_STATUS=0'+
-		@myNewLine+ N'		BEGIN'+
-		@myNewLine+ N'			SET @myDeadlockretries = 5'+
-		@myNewLine+ N'			WHILE (@myDeadlockretries > 0) '+
-		@myNewLine+ N'			BEGIN'+
-		@myNewLine+ N'				BEGIN TRY'+
-		@myNewLine+ N'					PRINT N''Executing ('' + CAST(getdate() as nvarchar(50)) + ''):	'' + @mySQLStatement;'+
-		@myNewLine+ N'					EXEC (@mySQLStatement);'+
-		@myNewLine+ N'					SET @myDeadlockretries = 0'+
-		@myNewLine+ N'				END TRY'+
-		@myNewLine+ N'				BEGIN CATCH'+
-		@myNewLine+ N'					IF (ERROR_NUMBER() = 1205) -- its a deadlock exception - 1205'+
-		@myNewLine+ N'					BEGIN'+
-		@myNewLine+ N'						Print ''Deadlock occured - retrying ...'''+
-		@myNewLine+ N'						SET @myDeadlockretries = @myDeadlockretries - 1 '+
-		@myNewLine+ N'						SET @myDeadlockWait = ''00:00:''+CAST(FLOOR(RAND()*(20-2+1))+2 AS NVARCHAR(8));'+
-		@myNewLine+ N'						WAITFOR DELAY @myDeadlockWait	-- Wait for 1 ms'+
-		@myNewLine+ N'					END'+
-		@myNewLine+ N'					ELSE'+
-		@myNewLine+ N'					BEGIN'+
-		@myNewLine+ N'						SET @CustomMessage1=''Create Constraint error on '+@Database_Name+N'''' +
-		@myNewLine+ N'						EXECUTE [SqlDeep].[dbo].[dbasp_get_error_info] @CustomMessage1,1,0,1,0,NULL'+
-		@myNewLine+ N'						SET @myDeadlockretries = 0'+
-		@myNewLine+ N'					END'+
-		@myNewLine+ N'				END CATCH'+
-		@myNewLine+ N'			END'+
-		@myNewLine+ N''+
-		@myNewLine+ N'			FETCH NEXT FROM @myCursor_CC INTO @mySQLStatement'+
-		@myNewLine+ N'		END '+
-		@myNewLine+ N'CLOSE @myCursor_CC; '+
-		@myNewLine+ N'DEALLOCATE @myCursor_CC; '+
+		@myNewLine+ N'		COMMIT TRANSACTION SqlDeepTrun;'+
+		@myNewLine+ N'		SET @myDeadlockretries = 0'+
+		@myNewLine+ N'		SET @myTransactionResult=1'+
+		@myNewLine+ N'		PRINT ''Table truncated successfully'''+
+		@myNewLine+ N'	END TRY'+
+		@myNewLine+ N'	BEGIN CATCH'+
+		@myNewLine+ N'		SET @CustomMessage1=''Rolling back because of table truncation error on '+@DatabaseName+N'''' +
+		@myNewLine+ N'		SET @myDeadlockretries = @myDeadlockretries - 1 ' +
+		@myNewLine+ N'		EXECUTE [SqlDeep].[dbo].[dbasp_get_error_info] @CustomMessage1,1,0,1,0,NULL;' +
+		@myNewLine+ N'		IF CURSOR_STATUS(''variable'',''@myCursor'') > -1' +
+		@myNewLine+ N'		BEGIN' +
+		@myNewLine+ N'			CLOSE @myCursor; ' +
+		@myNewLine+ N'			DEALLOCATE @myCursor;' + 
+		@myNewLine+ N'		END' +
+		@myNewLine+ N'		IF XACT_STATE() <> 0' +
+		@myNewLine+ N'			ROLLBACK TRANSACTION SqlDeepTrun;' +
+		@myNewLine+ N'	END CATCH' +
+		@myNewLine+ N'' +
+		@myNewLine+ N'	IF @myDeadlockretries>0' +
+		@myNewLine+ N'	BEGIN' +
+		@myNewLine+ N'		SET @myDeadlockWait = ''00:00:0.''+CAST(FLOOR(RAND()*(100-5+1))+5 AS NVARCHAR(8));' +
+		@myNewLine+ N'		PRINT ''Wait for '' + @myDeadlockWait' +
+		@myNewLine+ N'		WAITFOR DELAY @myDeadlockWait' +
+		@myNewLine+ N'	END' +
+		@myNewLine+ N'END' +
+		@myNewLine+ N'' +
+		@myNewLine+ N'IF @myTransactionResult=0' +
+		@myNewLine+ N'	EXECUTE [SqlDeep].[dbo].[dbasp_get_error_info] ''Transaction Failure after multiple retries.'',1,0,1,0,NULL;' +
 		@myNewLine+ N''
 		AS NVARCHAR(MAX))
 
@@ -377,7 +315,7 @@ BEGIN
 	END TRY
 	BEGIN CATCH
 		DECLARE @CustomMessage1 NVARCHAR(255)
-		SET @CustomMessage1='TruncateDb error on ' + @Database_Name
+		SET @CustomMessage1='TruncateDb error on ' + @DatabaseName
 		EXECUTE [SqlDeep].[dbo].[dbasp_get_error_info] @CustomMessage1,1,0,1,0,NULL
 	END CATCH
 END
@@ -386,7 +324,7 @@ EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'dbo',
 GO
 EXEC sp_addextendedproperty N'Created Date', N'2017-06-10', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_truncate_single_table', NULL, NULL
 GO
-EXEC sp_addextendedproperty N'Modified Date', N'2021-02-28', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_truncate_single_table', NULL, NULL
+EXEC sp_addextendedproperty N'Modified Date', N'2021-03-17', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_truncate_single_table', NULL, NULL
 GO
-EXEC sp_addextendedproperty N'Version', N'3.0.0.1', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_truncate_single_table', NULL, NULL
+EXEC sp_addextendedproperty N'Version', N'3.0.0.3', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_truncate_single_table', NULL, NULL
 GO
