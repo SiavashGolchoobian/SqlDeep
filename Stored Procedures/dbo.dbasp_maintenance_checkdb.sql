@@ -14,8 +14,8 @@ GO
 --	@SnapshotPathForReadonlyFiles:	a Folder path for saving snapshot of possible readonly database filegroups
 -- =============================================
 CREATE PROCEDURE [dbo].[dbasp_maintenance_checkdb]
-	@DatabaseNames NVARCHAR(MAX) = N'<ALL_USER_DATABASES>'
-	,@SnapshotPathForReadonlyFiles NVARCHAR(256)=NULL
+	@DatabaseNames NVARCHAR(MAX) = N'<ALL_USER_DATABASES>',
+	@SnapshotPathForReadonlyFiles NVARCHAR(256)=NULL
 AS
 BEGIN
 	SET NOCOUNT ON;
@@ -37,7 +37,8 @@ BEGIN
 				SET @SnapshotCreated=0
 				
 				--Phase0: Check for any read-only filegroup existence, so if existed sp will run dbcc on snapshot of database
-				IF EXISTS(SELECT 1 FROM sys.master_files WHERE is_read_only=1 AND database_id=DB_ID(@Database_Name))
+				--IF EXISTS(SELECT 1 FROM sys.master_files WHERE is_read_only=1 AND database_id=DB_ID(@Database_Name))
+				IF DB_ID(@Database_Name)>4		--Snapshot does not supported on system databases
 				BEGIN
 					SET @SnapshotSuffix = N'_' + REPLACE(CAST(CAST(GETDATE() as DATE) as nvarchar(10)), N'-',N'')+ N'_' +CAST(ABS(CHECKSUM(NewId())) % 100 as nvarchar(3))
 					SET @DatabaseforCheck=@Database_Name + @SnapshotSuffix
@@ -58,6 +59,7 @@ BEGIN
 				--Phase1: Run DBCC Checkdb
 				BEGIN TRY
 				IF EXISTS(SELECT 1 FROM sys.databases WHERE [name]=@DatabaseforCheck)
+					PRINT 'DBCC CHECKDB started on ' + @DatabaseforCheck
 					DBCC CHECKDB (@DatabaseforCheck) WITH NO_INFOMSGS, ALL_ERRORMSGS;
 				END TRY
 				BEGIN CATCH
