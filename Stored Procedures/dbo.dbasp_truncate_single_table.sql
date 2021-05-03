@@ -210,6 +210,8 @@ BEGIN
 		@myNewLine+	N'		INNER JOIN myCreateConstarint ON myCreateConstarint.SchemaName=[myRefSchemas].[Name] AND myCreateConstarint.TableName=[myRefTables].[Name] '+
 		@myNewLine+	N'	WHERE '+
 		@myNewLine+	N'		myRefTables.is_ms_shipped=0'+
+		@myNewLine+	N'		AND myCreateConstarint.SchemaName<>[myRefSchemas].[Name]'+
+		@myNewLine+	N'		AND myCreateConstarint.TableName<>[myRefTables].[Name]'+
 		@myNewLine+	N')'+
 		@myNewLine+	N'INSERT INTO #CreateConstarint (SQLStatement,SchemaName,TableName,FkName,DependencyLevel)'+
 		@myNewLine+	N'SELECT SQLStatement,SchemaName,TableName,FkName,DependencyLevel FROM myCreateConstarint'
