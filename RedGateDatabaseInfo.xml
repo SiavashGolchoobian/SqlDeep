@@ -55,6 +55,9 @@
       <Sequence>Sequences</Sequence>
       <SearchPropertyList>Search Property Lists</SearchPropertyList>
       <SecurityPolicy>Security Policies</SecurityPolicy>
+      <ExternalFileFormat>External Resources\External File Formats</ExternalFileFormat>
+      <ExternalDataSource>External Resources\External Data Sources</ExternalDataSource>
+      <ExternalTable>Tables\External Tables</ExternalTable>
     </Prefixes>
     <DataWriteAllFilesInOneDirectory>True</DataWriteAllFilesInOneDirectory>
   </WriteToFileOptions>
