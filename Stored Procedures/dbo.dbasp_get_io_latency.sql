@@ -142,7 +142,7 @@ BEGIN
 		END
 	END
 
-	-------------------------Purging Expired Recors from monitoring table
+	-------------------------Purging Expired Records from monitoring table
 	SET @myLogRetentionDays=-1*@LogRetentionDays
 	DELETE [trace].[VfLogHistory] WHERE [LogTime] < DATEADD(DAY,@myLogRetentionDays,@myLogTime)
 END
