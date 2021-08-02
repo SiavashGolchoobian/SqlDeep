@@ -10,10 +10,14 @@ GO
 --                 This procedure finds the name and paths for the top N data or log files 
 --                 on the Server with the most high value of average total IO latency. 
 -- Input Parameters:
---	@CaptureStatEnabled		Bit value, Capture the current state of IO
---	@ShowLastReport			Show the latest report of IO latency according to Captured data
+--	@CaptureStatEnabled:		Bit value, Capture the current state of IO
+--	@ShowLastReport:			Show the latest report of IO latency according to Captured data
+--	@LogRetentionDays:			Any integer number, representing Retantion days of log records
 -- ==================================================================================
-CREATE PROCEDURE [dbo].[dbasp_get_io_latency] (@CaptureStatEnabled BIT=1,@ShowLastReport BIT=0)
+CREATE PROCEDURE [dbo].[dbasp_get_io_latency] (
+	@CaptureStatEnabled BIT=1,
+	@ShowLastReport BIT=0,
+	@LogRetentionDays INT=5)
 AS
 BEGIN
    SET NOCOUNT ON
@@ -26,6 +30,7 @@ BEGIN
 	DECLARE @myLastSnapshotIdLogTime DATETIME;
 	DECLARE @myPreviousSnapshotIdLogTime DATETIME;
 	DECLARE @myReportDuration BIGINT;
+	DECLARE @myLogRetentionDays INT;
 
 	SET @myCaptureStat=@CaptureStatEnabled;
 	SET @myShowLastReport=@ShowLastReport;
@@ -136,6 +141,10 @@ BEGIN
 			ORDER BY [WriteLatency(ms)] DESC;
 		END
 	END
+
+	-------------------------Purging Expired Recors from monitoring table
+	SET @myLogRetentionDays=-1*@LogRetentionDays
+	DELETE [trace].[VfLogHistory] WHERE [LogTime] < DATEADD(DAY,@myLogRetentionDays,@myLogTime)
 END
 GO
 EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_get_io_latency', NULL, NULL
