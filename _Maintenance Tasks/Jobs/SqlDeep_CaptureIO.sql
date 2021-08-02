@@ -1,11 +1,11 @@
 USE [msdb]
 GO
 
-/****** Object:  Job [SqlDeep_CaptureIO]    Script Date: 8/2/2021 10:54:08 AM ******/
+/****** Object:  Job [SqlDeep_CaptureIO]    Script Date: 8/2/2021 6:00:12 PM ******/
 BEGIN TRANSACTION
 DECLARE @ReturnCode INT
 SELECT @ReturnCode = 0
-/****** Object:  JobCategory [SqlDeep Jobs]    Script Date: 8/2/2021 10:54:08 AM ******/
+/****** Object:  JobCategory [SqlDeep Jobs]    Script Date: 8/2/2021 6:00:12 PM ******/
 IF NOT EXISTS (SELECT name FROM msdb.dbo.syscategories WHERE name=N'SqlDeep Jobs' AND category_class=1)
 BEGIN
 EXEC @ReturnCode = msdb.dbo.sp_add_category @class=N'JOB', @type=N'LOCAL', @name=N'SqlDeep Jobs'
@@ -25,7 +25,7 @@ EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'SqlDeep_CaptureIO',
 		@category_name=N'SqlDeep Jobs', 
 		@owner_login_name=N'sa', @job_id = @jobId OUTPUT
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-/****** Object:  Step [CaptureIOLatency]    Script Date: 8/2/2021 10:54:08 AM ******/
+/****** Object:  Step [CaptureIOLatency]    Script Date: 8/2/2021 6:00:13 PM ******/
 EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'CaptureIOLatency', 
 		@step_id=1, 
 		@cmdexec_success_code=0, 
@@ -36,7 +36,7 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'CaptureI
 		@retry_attempts=0, 
 		@retry_interval=0, 
 		@os_run_priority=0, @subsystem=N'TSQL', 
-		@command=N'EXECUTE [dbo].[dbasp_get_io_latency] 1,0', 
+		@command=N'EXECUTE [dbo].[dbasp_get_io_latency] 1,0,5', 
 		@database_name=N'SqlDeep', 
 		@flags=0
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
