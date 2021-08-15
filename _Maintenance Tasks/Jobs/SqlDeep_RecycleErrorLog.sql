@@ -45,7 +45,7 @@ EXECUTE [dbo].[dbasp_maintenance_cycle_error_log] @RecyclingThereshold_MB
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
 EXEC @ReturnCode = msdb.dbo.sp_update_job @job_id = @jobId, @start_step_id = 1
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-EXEC @ReturnCode = msdb.dbo.sp_add_jobschedule @job_id=@jobId, @name=N'CollectorSchedule_Every_6h', 
+EXEC @ReturnCode = msdb.dbo.sp_add_jobschedule @job_id=@jobId, @name=N'SqlDeep.RecycleErrorLog', 
 		@enabled=1, 
 		@freq_type=4, 
 		@freq_interval=1, 

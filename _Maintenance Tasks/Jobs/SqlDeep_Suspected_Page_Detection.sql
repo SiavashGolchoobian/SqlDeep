@@ -48,7 +48,7 @@ EXECUTE  [dbo].[dbasp_maintenance_suspected_pages]  @mail_profile_name,@mail_rec
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
 EXEC @ReturnCode = msdb.dbo.sp_update_job @job_id = @jobId, @start_step_id = 1
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-EXEC @ReturnCode = msdb.dbo.sp_add_jobschedule @job_id=@jobId, @name=N'Everyday_21_30', 
+EXEC @ReturnCode = msdb.dbo.sp_add_jobschedule @job_id=@jobId, @name=N'SqlDeep.SuspectedPageDetection', 
 		@enabled=1, 
 		@freq_type=4, 
 		@freq_interval=1, 

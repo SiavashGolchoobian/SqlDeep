@@ -77,7 +77,7 @@ EXECUTE [dbo].[dbasp_maintenance_updatestatistics] @DatabaseNames,@PrintOnly',
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
 EXEC @ReturnCode = msdb.dbo.sp_update_job @job_id = @jobId, @start_step_id = 1
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-EXEC @ReturnCode = msdb.dbo.sp_add_jobschedule @job_id=@jobId, @name=N'Everyday_05_10_00', 
+EXEC @ReturnCode = msdb.dbo.sp_add_jobschedule @job_id=@jobId, @name=N'SqlDeep.Reindex_05_10_00', 
 		@enabled=1, 
 		@freq_type=4, 
 		@freq_interval=1, 
@@ -91,7 +91,7 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobschedule @job_id=@jobId, @name=N'Everyday_
 		@active_end_time=235959, 
 		@schedule_uid=N'4f3f8e54-c94c-417b-ba9a-b3a5878bdd3c'
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-EXEC @ReturnCode = msdb.dbo.sp_add_jobschedule @job_id=@jobId, @name=N'Everyday_22_05_00', 
+EXEC @ReturnCode = msdb.dbo.sp_add_jobschedule @job_id=@jobId, @name=N'SqlDeep.Reindex_22_05_00', 
 		@enabled=1, 
 		@freq_type=4, 
 		@freq_interval=1, 
