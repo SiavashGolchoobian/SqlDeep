@@ -47,7 +47,7 @@ EXECUTE [dbo].[dbasp_activity_monitor] @GrabTransactionsOver_Second,@LogRetentio
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
 EXEC @ReturnCode = msdb.dbo.sp_update_job @job_id = @jobId, @start_step_id = 1
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-EXEC @ReturnCode = msdb.dbo.sp_add_jobschedule @job_id=@jobId, @name=N'CollectorSchedule_Every_5min', 
+EXEC @ReturnCode = msdb.dbo.sp_add_jobschedule @job_id=@jobId, @name=N'SqlDeep.ActivityMonitor', 
 		@enabled=1, 
 		@freq_type=4, 
 		@freq_interval=1, 
