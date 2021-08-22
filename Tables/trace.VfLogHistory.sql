@@ -15,5 +15,5 @@ CREATE TABLE [trace].[VfLogHistory]
 [LogTime] [datetime] NOT NULL
 ) ON [Data_OLTP]
 GO
-ALTER TABLE [trace].[VfLogHistory] ADD CONSTRAINT [PK_VfLogHistory] PRIMARY KEY CLUSTERED  ([RecordId]) WITH (FILLFACTOR=90) ON [Data_OLTP]
+ALTER TABLE [trace].[VfLogHistory] ADD CONSTRAINT [PK_VfLogHistory] PRIMARY KEY CLUSTERED  ([RecordId]) WITH (FILLFACTOR=90, PAD_INDEX=ON) ON [Data_OLTP]
 GO
