@@ -12,7 +12,7 @@ GO
 --	@DatabaseNames:	'<ALL_USER_DATABASES>' or '<ALL_SYSTEM_DATABASES>' or '<ALL_DATABASES>' or 'dbname1,dbname2,...,dbnameN'
 --	@FillFactor:	'Auto' or 'DISABLE' or '0' to '100'	//use 'Auto' to decision between Reorganzie or Rebuild action automatically based on Low/Mid/HighFragmentation_Boundries)
 --	@ForceTo:		'Auto' or 'REBUILD' or 'REORGANIZE'	//--Force to REBUILD or REORGANIZE all indexes also you can use AUTO to decide automatically
---	@IndexesUsedInLastXdays:	0 or any above values //Reindex only index objects that are used in last X days
+--	@IndexesUsedInLastXdays:	0 or any above values //Reindex only index objects that are used in last X days,0 means ignoring this filter option
 --	@HugeUntidyDetection: 0 or 1 //Detecting huge tables(MB & Rows) with low fragmentation but high untidy MB/records/pages and reorganizing them, be careful this option can make huge log records in logfile!!!
 --	@MinimumRowCountToProcess:	Null or any positive value	//Indicate minimum row count for candidate tables of reindexing process, use Null or zero for ignore this parameter
 --	@MaximumRowCountToProcess:	Null or any positive value	//Indicate maximum row count for candidate tables of reindexing process, use Null for ignore this parameter
@@ -117,8 +117,8 @@ BEGIN
 			@myNewLine+	N'	WHERE'+
 			@myNewLine+	N'		myStats.page_count >= ' + CAST(ISNULL(@myMinimumPagesToConsider,0) AS NVARCHAR(MAX))+
 			@myNewLine+	N''+
-			@myNewLine+	N'CREATE TABLE #IndexCommands (ID int IDENTITY, SQLStatement nvarchar(max),CommandsType nvarchar(50),Fragmentation float);'+
-			@myNewLine+	N'INSERT INTO #IndexCommands (SQLStatement, CommandsType, Fragmentation)'+
+			@myNewLine+	N'CREATE TABLE #IndexCommands (ID int IDENTITY, SQLStatement nvarchar(max),CommandsType nvarchar(50),Fragmentation float,IndexTotalSizeMB INT);'+
+			@myNewLine+	N'INSERT INTO #IndexCommands (SQLStatement, CommandsType, Fragmentation,IndexTotalSizeMB)'+
 			@myNewLine+	N'	SELECT'+
 			@myNewLine+	N'		myCore3.CommandStr + CASE '+
 			@myNewLine+	N'				WHEN myCore3.CommandsType = N''REORGANIZE'' AND LEN(myCore3.WithStrReorganize)>0 THEN N'' WITH ('' + RIGHT(myCore3.WithStrReorganize,LEN(myCore3.WithStrReorganize)-1)+'')'' '+
@@ -126,7 +126,8 @@ BEGIN
 			@myNewLine+	N'				ELSE '''' '+
 			@myNewLine+	N'			END + '';'' As SQLStatement, '+
 			@myNewLine+	N'		myCore3.CommandsType,'+
-			@myNewLine+	N'		myCore3.Fragmentation'+
+			@myNewLine+	N'		myCore3.Fragmentation,'+
+			@myNewLine+	N'		myCore3.IndexTotalSizeMB'+
 			@myNewLine+	N'	FROM'+
 			@myNewLine+	N'		('+
 			@myNewLine+	N'		SELECT'+
@@ -141,7 +142,8 @@ BEGIN
 			@myNewLine+	N'						END,'+
 			@myNewLine+	N'			myCore2.[object_id],'+
 			@myNewLine+	N'			myCore2.index_id,'+
-			@myNewLine+	N'			myCore2.Fragmentation'+
+			@myNewLine+	N'			myCore2.Fragmentation,'+
+			@myNewLine+	N'			myCore2.IndexTotalSizeMB'+
 			@myNewLine+	N'		FROM'+
 			@myNewLine+	N'			('+
 			@myNewLine+	N'			SELECT'+
@@ -178,7 +180,8 @@ BEGIN
 			@myNewLine+	N'				WithCompressRowGroups=CASE WHEN myCore1.IndexType IN (5,6,7) THEN '',COMPRESS_ALL_ROW_GROUPS = ON'' ELSE '''' END,'+
 			@myNewLine+	N'				myCore1.[object_id],'+
 			@myNewLine+	N'				myCore1.index_id,'+
-			@myNewLine+	N'				myCore1.Fragmentation'+
+			@myNewLine+	N'				myCore1.Fragmentation,'+
+			@myNewLine+	N'				myCore1.IndexTotalSizeMB'+
 			@myNewLine+	N'			FROM'+
 			@myNewLine+	N'				('+
 			@myNewLine+	N'				SELECT'+
@@ -195,7 +198,7 @@ BEGIN
 			@myNewLine+	N'						myIndexes.index_id,'+
 			@myNewLine+	N'						myIndexes.type as IndexType,'+
 			@myNewLine+	N'						mySchemas.name as SchemaName,'+
-			@myNewLine+	N'						myTables.NAME as TableName,'+
+			@myNewLine+	N'						myTables.name as TableName,'+
 			@myNewLine+	N'						myIndexes.name as IndexName,'+
 			@myNewLine+	N'						mySpace.type as PartitionType,						--FG=Filegroup,PS=PartitionScheme'+
 			@myNewLine+	N'						myStats.partition_number as PartitionNo,'+

@@ -25,7 +25,7 @@ AS
 	DECLARE @mySQLScript NVARCHAR(max);
 	DECLARE @myNewLine nvarchar(10);
 	DECLARE @myTables TABLE (ObjectId INT NOT NULL PRIMARY KEY, DatabaseName NVARCHAR(128) NOT NULL, SchemaName NVARCHAR(128) NOT NULL, TableName NVARCHAR(128) NOT NULL,
-							TableColumns NVARCHAR(MAX) NOT NULL, HasPrimaryKey BIT, HasUniqueConstraint BIT, HasUniueIndex BIT, HasIdentity BIT, 
+							TableColumns NVARCHAR(MAX) NOT NULL, HasPrimaryKey BIT, HasUniqueConstraint BIT, HasUniqueIndex BIT, HasIdentity BIT, 
 							HasRowGuidCol BIT, HasFilestream BIT, HasSparesColumn BIT, HasLOB BIT, PrimaryKeyColumnName NVARCHAR(MAX),
 							UniqueConstraintColumnName NVARCHAR(MAX), UniqueIndexColumnName NVARCHAR(MAX), IdentityColumName NVARCHAR(128),
 							RowGuidColumnName NVARCHAR(128), FilestramColumnName NVARCHAR(128), SparesColumnName NVARCHAR(128), 
@@ -46,7 +46,7 @@ AS
 			@myNewLine+ N'USE '+ CAST(QUOTENAME(@Database_Name) AS NVARCHAR(MAX)) + N';'+
 			@myNewLine+ N'CREATE TABLE #myTablesOrder (ObjectId INT NOT NULL PRIMARY KEY, TableOrder INT NOT NULL)'+
 			@myNewLine+ N'CREATE TABLE #myTables (ObjectId INT NOT NULL PRIMARY KEY, DatabaseName NVARCHAR(128) NOT NULL, SchemaName NVARCHAR(128) NOT NULL, TableName NVARCHAR(128) NOT NULL,'+
-			@myNewLine+ N'						TableColumns NVARCHAR(MAX) NOT NULL, HasPrimaryKey BIT, HasUniqueConstraint BIT, HasUniueIndex BIT, HasIdentity BIT, '+
+			@myNewLine+ N'						TableColumns NVARCHAR(MAX) NOT NULL, HasPrimaryKey BIT, HasUniqueConstraint BIT, HasUniqueIndex BIT, HasIdentity BIT, '+
 			@myNewLine+ N'						HasRowGuidCol BIT, HasFilestream BIT, HasSparesColumn BIT, HasLOB BIT, PrimaryKeyColumnName NVARCHAR(MAX),'+
 			@myNewLine+ N'						UniqueConstraintColumnName NVARCHAR(MAX), UniqueIndexColumnName NVARCHAR(MAX), IdentityColumName NVARCHAR(128),'+
 			@myNewLine+ N'						RowGuidColumnName NVARCHAR(128), FilestramColumnName NVARCHAR(128), SparesColumnName NVARCHAR(128), '+
@@ -92,7 +92,7 @@ AS
 			@myNewLine+ N'ORDER BY'+
 			@myNewLine+ N'	MAX([myTableDependencies].[DependencyLevel])'+
 			@myNewLine+ N'--=====================Extract Tables Information'+
-			@myNewLine+ N'INSERT INTO #myTables (ObjectId, DatabaseName, SchemaName, TableName, TableColumns,HasPrimaryKey,HasUniqueConstraint,HasUniueIndex,HasIdentity,HasRowGuidCol,HasFilestream,HasSparesColumn,HasLOB,PrimaryKeyColumnName,UniqueConstraintColumnName,UniqueIndexColumnName,IdentityColumName,RowGuidColumnName,FilestramColumnName,SparesColumnName,[TableOrder])'+
+			@myNewLine+ N'INSERT INTO #myTables (ObjectId, DatabaseName, SchemaName, TableName, TableColumns,HasPrimaryKey,HasUniqueConstraint,HasUniqueIndex,HasIdentity,HasRowGuidCol,HasFilestream,HasSparesColumn,HasLOB,PrimaryKeyColumnName,UniqueConstraintColumnName,UniqueIndexColumnName,IdentityColumName,RowGuidColumnName,FilestramColumnName,SparesColumnName,[TableOrder])'+
 			@myNewLine+ N'SELECT'+
 			@myNewLine+ N'	myTable.object_id,'+
 			@myNewLine+ N'	DB_NAME() AS DatabaseName,'+
