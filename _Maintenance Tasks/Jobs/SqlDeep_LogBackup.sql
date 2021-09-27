@@ -74,10 +74,12 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Shrink l
 		@os_run_priority=0, @subsystem=N'TSQL', 
 		@command=N'DECLARE @DatabaseNames nvarchar(max)
 DECLARE @TargetSizeMB nvarchar(255)
+DECLARE @PrintOnly bit
 
 SET @DatabaseNames=''<ALL_DATABASES>''
 SET @TargetSizeMB=''EP:_ShrinkLogToSizeMB''
-EXECUTE [dbo].[dbasp_maintenance_shrinklog] @DatabaseNames,@TargetSizeMB', 
+SET @PrintOnly=0
+EXECUTE [dbo].[dbasp_maintenance_shrinklog] @DatabaseNames,@TargetSizeMB,@PrintOnly', 
 		@database_name=N'SqlDeep', 
 		@flags=0
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback

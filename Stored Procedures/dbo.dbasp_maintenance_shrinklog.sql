@@ -16,8 +16,8 @@ GO
 -- =============================================
 CREATE PROCEDURE [dbo].[dbasp_maintenance_shrinklog]
 	@DatabaseNames NVARCHAR(MAX) = N'<ALL_USER_DATABASES>',
-	@TargetSizeMB NVARCHAR(255) = N'0'
-	--@Print_Only BIT=0
+	@TargetSizeMB NVARCHAR(255) = N'0',
+	@Print_Only BIT=0
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -142,7 +142,7 @@ BEGIN
 										SET @Command='Use ' + QUOTENAME(@Database_Name) +';DBCC SQLPERF(LOGSPACE);'
 										Delete from @logSpaceUsedResult2012
 										Insert into @logSpaceUsedResult2012 exec (@Command)
-										SELECT @ActualShrinkableLogSizePage=CAST(ISNULL((((100-[Log Space Used (%)])*[Log Size (MB)])/100)*(1024/8),0) AS BIGINT) FROM @logSpaceUsedResult2012 WHERE [Database Name]=@Database_Name
+										SELECT @ActualShrinkableLogSizePage=CAST(ISNULL(((([Log Space Used (%)])*[Log Size (MB)])/100)*(1024/8),0) AS BIGINT) FROM @logSpaceUsedResult2012 WHERE [Database Name]=@Database_Name
 									END
 								END  
 							ELSE  
@@ -188,13 +188,13 @@ BEGIN
 							IF @ShrinkToSizePage < @CurrentLogSizePage
 								BEGIN
 									SET @ShrinkToSizeMB = @ShrinkToSizePage * 8 / 1024
-									SET @Command='Use ' + QUOTENAME(@Database_Name) +'; '
+									SET @Command='USE ' + QUOTENAME(@Database_Name) +'; '
 									SET @Command= @Command + 'CHECKPOINT;'
 									SET @Command= @Command + 'DBCC SHRINKFILE ('''+ CAST(@LogicalName as nvarchar(255)) + ''',' + CAST(@ShrinkToSizeMB as nvarchar(255)) + ');'
 									Print @Command
 									--==============Start of Shrinking log
 									BEGIN TRY
-										--IF @Print_Only=0
+										IF @Print_Only=0
 											EXEC (@Command)
 									END TRY
 									BEGIN CATCH
