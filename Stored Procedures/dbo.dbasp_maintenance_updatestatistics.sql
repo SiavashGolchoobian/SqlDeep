@@ -2,12 +2,10 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-
-
 -- =============================================
--- Author:		<Ian Stirk + Golchoobian>
+-- Author:		<Ian Stirk + Golchoobian + Saffarpour>
 -- Create date: <01/21/2015>
--- Version:		<3.0.0.1>
+-- Version:		<3.0.1.1>
 -- Description:	<Update whole database necessary object(table/indexed views) statistics>
 -- Input Parameters:
 --	@DatabaseNames:	'<ALL_USER_DATABASES>' or '<ALL_SYSTEM_DATABASES>' or '<ALL_DATABASES>' or 'dbname1,dbname2,...,dbnameN'
@@ -18,6 +16,7 @@ CREATE PROCEDURE [dbo].[dbasp_maintenance_updatestatistics]
 	@DatabaseNames NVARCHAR(MAX) = N'<ALL_USER_DATABASES>',
 	@IgnoreStatsUpdatedInLastXHours INT = 6,
 	@UnusedStatTresholdInDays INT=32,
+	@ObjectNameList NVARCHAR(MAX) = NULL,
 	@PrintOnly BIT=0
 AS
 BEGIN
@@ -42,14 +41,19 @@ BEGIN
 				@myNewLine + N'DECLARE @myIgnoreStatsUpdatedInLastXHours INT'+
 				@myNewLine + N'DECLARE @myUnusedStatTresholdInDays INT'+
 				@myNewLine + N'DECLARE @myToday DATETIME2(7)'+
+				@myNewLine + N'DECLARE @myObjectNameList NVARCHAR(MAX)'+
 				@myNewLine + N'SET @myIgnoreStatsUpdatedInLastXHours = '+ CAST(@IgnoreStatsUpdatedInLastXHours AS NVARCHAR(MAX))+
 				@myNewLine + N'SET @myUnusedStatTresholdInDays = '+CAST(@UnusedStatTresholdInDays AS NVARCHAR(MAX))+
 				@myNewLine + N'SET @myIgnoreStatsUpdatedInLastXHours = @myIgnoreStatsUpdatedInLastXHours * -1'+
 				@myNewLine + N'SET @myUnusedStatTresholdInDays = @myUnusedStatTresholdInDays * -1'+
 				@myNewLine + N'SET @myToday=CAST(GETDATE() AS DATETIME2(7))'+
-				@myNewLine+	N'CREATE TABLE #StatCommands (ID int IDENTITY, SQLStatement nvarchar(max));'+
-				@myNewLine+	N'INSERT INTO #StatCommands (SQLStatement)'+
-				@myNewLine + N'SELECT'+
+				@myNewLine + N'SET @myObjectNameList=''' + ISNULL(@ObjectNameList,'')+ N''';'+
+				@myNewLine + N'CREATE TABLE #ObjectTable (objectId int, ObjectName NVARCHAR(128))'+	
+				@myNewLine + N'IF @myObjectNameList>'''''+	
+				@myNewLine + N'	INSERT INTO #ObjectTable SELECT OBJECT_ID('''' + Parameter + '''') AS objectId,Parameter AS ObjectName FROM [SqlDeep].[dbo].dbafn_split(N'','',@myObjectNameList) '+
+				@myNewLine + N'CREATE TABLE #StatCommands (ID int IDENTITY, TableName VARCHAR(50), TableRows BIGINT, ModifiedRows BIGINT,SQLStatement nvarchar(max));'+
+				@myNewLine + N'INSERT INTO #StatCommands (TableName, TableRows, ModifiedRows, SQLStatement)'+
+				@myNewLine + N'SELECT [myStatData].SchemaName + ''.'' + [myStatData].ObjectName AS TableName, [myStatData].[TableRows], [myStatData].[ModifiedRows],'+
 				@myNewLine + N'	N''UPDATE STATISTICS '' + QUOTENAME([myStatData].[SchemaName]) + N''.'' + QUOTENAME([myStatData].[ObjectName]) + N'' '' + QUOTENAME([myStatData].[StatName]) + N'' WITH SAMPLE ''+ [myStatData].[SampleValue] + N'' -- '' + CAST(COALESCE([myStatData].[StatRows],[myStatData].[TableRows],0) + ISNULL([myStatData].[ModifiedRows],0) AS NVARCHAR(MAX))+ N'' rows that has '' + CAST(ISNULL([myStatData].[ModifiedRows],0) AS NVARCHAR(MAX)) + N'' modified rows.'' AS UpdateCommend'+
 				@myNewLine + N'FROM'+
 				@myNewLine + N'	('+
@@ -93,6 +97,7 @@ BEGIN
 				@myNewLine + N'		OR '+
 				@myNewLine + N'		[myStatData].[last_updated] BETWEEN DATEADD(DAY,@myUnusedStatTresholdInDays,@myToday) AND DATEADD(HOUR,@myIgnoreStatsUpdatedInLastXHours,@myToday)'+
 				@myNewLine + N'		)																										-- Update stats that updated recently but not too recently or completed new stats'+
+				@myNewLine+  N'	AND (@myObjectNameList = '''' OR EXISTS (SELECT 1 FROM #ObjectTable as myList WHERE myList.objectId = myStatData.object_id))'+
 				CAST(CASE WHEN @PrintOnly=1 THEN @myNewLine+N'/*' ELSE N'' END AS NVARCHAR(MAX)) +	--for Print only Command, Comment execution
 				@myNewLine+ N'DECLARE @myCursor Cursor;'+
 				@myNewLine+ N'DECLARE @mySQLStatement NVARCHAR(max);'+
@@ -121,8 +126,9 @@ BEGIN
 				@myNewLine+ N'DEALLOCATE @myCursor; '+
 				@myNewLine+ N''+
 				CAST(CASE WHEN @PrintOnly=1 THEN @myNewLine+N'*/' ELSE N'' END AS NVARCHAR(MAX)) +	--for Print only Command, Comment execution
-				CAST(CASE WHEN @PrintOnly=1 THEN @myNewLine+N'SELECT * FROM #StatCommands;' ELSE N'' END AS NVARCHAR(MAX)) +	--for Print only Command, Return commands list
-				@myNewLine+	N'DROP TABLE #StatCommands;'
+				CAST(CASE WHEN @PrintOnly=1 THEN @myNewLine+N'SELECT * FROM #StatCommands ORDER BY [ModifiedRows] ASC;' ELSE N'' END AS NVARCHAR(MAX)) +	--for Print only Command, Return commands list
+				@myNewLine+	N'DROP TABLE #StatCommands;'+
+				@myNewLine+	N'DROP TABLE #ObjectTable;'
 				AS NVARCHAR(MAX))
 
 			EXEC [dbo].[dbasp_print_text] @mySQLScript;
