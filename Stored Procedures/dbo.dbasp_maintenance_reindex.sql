@@ -2,17 +2,16 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-
 -- =============================================
 -- Author:		<Golchoobian,Saffarpour>
 -- Create date: <4/2/2016>
--- Version:		<3.0.0.4>
+-- Version:		<3.0.0.6>
 -- Description:	<Refresh all enabled unheaped database indexes>
 -- Input Parameters:
 --	@DatabaseNames:	'<ALL_USER_DATABASES>' or '<ALL_SYSTEM_DATABASES>' or '<ALL_DATABASES>' or 'dbname1,dbname2,...,dbnameN'
 --	@FillFactor:	'Auto' or 'DISABLE' or '0' to '100'	//use 'Auto' to decision between Reorganzie or Rebuild action automatically based on Low/Mid/HighFragmentation_Boundries)
 --	@ForceTo:		'Auto' or 'REBUILD' or 'REORGANIZE'	//--Force to REBUILD or REORGANIZE all indexes also you can use AUTO to decide automatically
---	@IndexesUsedInLastXdays:	0 or any above values //Reindex only index objects that are used in last X days,0 means ignoring this filter option
+--	@IndexesUsedInLastXdays:	0 or any above values //Reindex only index objects that are used in last X days
 --	@HugeUntidyDetection: 0 or 1 //Detecting huge tables(MB & Rows) with low fragmentation but high untidy MB/records/pages and reorganizing them, be careful this option can make huge log records in logfile!!!
 --	@MinimumRowCountToProcess:	Null or any positive value	//Indicate minimum row count for candidate tables of reindexing process, use Null or zero for ignore this parameter
 --	@MaximumRowCountToProcess:	Null or any positive value	//Indicate maximum row count for candidate tables of reindexing process, use Null for ignore this parameter
@@ -27,6 +26,7 @@ CREATE PROCEDURE [dbo].[dbasp_maintenance_reindex]
 	@HugeUntidyDetection BIT=0,
 	@MinimumRowCountToProcess BIGINT=NULL,
 	@MaximumRowCountToProcess BIGINT=NULL,
+	@ObjectNameList NVARCHAR(MAX) = NULL,
 	@PrintOnly BIT=1
 AS
 BEGIN
@@ -82,12 +82,17 @@ BEGIN
 			@myNewLine+ N'DECLARE @myMinimumLastUsedDate Datetime;'+
 			@myNewLine+ N'DECLARE @myLowerRowCount BIGINT;'+
 			@myNewLine+ N'DECLARE @myUpperRowCount BIGINT;'+
+			@myNewLine+ N'DECLARE @myObjectNameList NVARCHAR(MAX);'+
 			@myNewLine+ N'SET @myLowerRowCount=' + CAST(ISNULL(@MinimumRowCountToProcess,-1) AS NVARCHAR(MAX)) + N';'+
 			@myNewLine+ N'SET @myUpperRowCount=' + CAST(ISNULL(@MaximumRowCountToProcess,-1) AS NVARCHAR(MAX)) + N';'+
 			@myNewLine+ N'SET @myIndexesUsedInLastXdays=' + CAST(ABS(ISNULL(@IndexesUsedInLastXdays,0)) AS NVARCHAR(MAX)) + N';'+
+			@myNewLine+ N'SET @myObjectNameList=''' + ISNULL(@ObjectNameList,'')+ N''';'+
 			@myNewLine+ N'SET @myMinimumLastUsedDate=DATEADD(Day,(-1 * @myIndexesUsedInLastXdays),GETDATE());'+
 			@myNewLine+ N''+
-			@myNewLine+	N'CREATE TABLE #PhysicalStat(partition_number INT,avg_fragmentation_in_percent float,alloc_unit_type_desc NVARCHAR(60),page_count BIGINT,object_id INT,index_id INT);'+
+			@myNewLine+ N'CREATE TABLE #ObjectTable (objectId int, ObjectName NVARCHAR(128))'+
+			@myNewLine+ N'IF @myObjectNameList>'''''+
+			@myNewLine+ N'	INSERT INTO #ObjectTable SELECT OBJECT_ID(''''+Parameter+'''') AS objectId,Parameter AS ObjectName FROM [SqlDeep].[dbo].dbafn_split(N'','',@myObjectNameList) '+
+			@myNewLine+	N'CREATE TABLE #PhysicalStat(partition_number INT,avg_fragmentation_in_percent float,alloc_unit_type_desc NVARCHAR(60),page_count BIGINT,object_id INT,index_id INT,row_count INT);'+
 			@myNewLine+	N'INSERT INTO #PhysicalStat'+
 			@myNewLine+	N'SELECT DISTINCT '+
 			@myNewLine+	N'	myStats.partition_number,'+
@@ -95,13 +100,11 @@ BEGIN
 			@myNewLine+	N'	myStats.alloc_unit_type_desc,'+
 			@myNewLine+	N'	myStats.page_count,'+
 			@myNewLine+	N'	myStats.[object_id],'+
-			@myNewLine+	N'	myStats.index_id'+
+			@myNewLine+	N'	myStats.index_id,'+
+			@myNewLine+	N'	myPartition.row_count'+
 			@myNewLine+	N'FROM '+
-			@myNewLine+	N'	sys.dm_db_index_physical_stats(DB_ID(),NULL,NULL,NULL,''LIMITED'') AS myStats'+
-			@myNewLine+	N'	INNER JOIN'+
 			@myNewLine+	N'	('+
 			@myNewLine+	N'		SELECT '+
-			@myNewLine+	N'			ROW_NUMBER() OVER(ORDER BY myPartitionStat.row_count DESC) AS RowNumber,'+
 			@myNewLine+	N'			myPartitionStat.OBJECT_ID,'+
 			@myNewLine+	N'			myPartitionStat.index_id ,'+
 			@myNewLine+	N'			myPartitionStat.row_count'+
@@ -113,13 +116,18 @@ BEGIN
 			@myNewLine+	N'			AND myPartitionStat.index_id > 0'+
 			@myNewLine+	N'			AND CASE WHEN @myLowerRowCount = -1 THEN 1 ELSE myPartitionStat.row_count END >= CASE WHEN @myLowerRowCount = -1 THEN 1 ELSE @myLowerRowCount END'+
 			@myNewLine+	N'			AND CASE WHEN @myUpperRowCount = -1 THEN 1 ELSE myPartitionStat.row_count END <= CASE WHEN @myUpperRowCount = -1 THEN 1 ELSE @myUpperRowCount END'+
-			@myNewLine+	N'	) AS myPartition ON myPartition.OBJECT_ID = myStats.OBJECT_ID AND myPartition.index_id = myStats.index_id '+
+			@myNewLine+ N'			AND (@myObjectNameList = '''' OR EXISTS (SELECT 1 FROM #ObjectTable as myList WHERE myList.objectId = myPartitionStat.object_id))'+
+			@myNewLine+	N'	) AS myPartition '+
+			@myNewLine+	N'CROSS APPLY'+
+			@myNewLine+	N'		sys.dm_db_index_physical_stats(DB_ID(),myPartition.[object_id],myPartition.index_id,NULL,''LIMITED'') AS myStats'+
 			@myNewLine+	N'	WHERE'+
 			@myNewLine+	N'		myStats.page_count >= ' + CAST(ISNULL(@myMinimumPagesToConsider,0) AS NVARCHAR(MAX))+
 			@myNewLine+	N''+
-			@myNewLine+	N'CREATE TABLE #IndexCommands (ID int IDENTITY, SQLStatement nvarchar(max),CommandsType nvarchar(50),Fragmentation float,IndexTotalSizeMB INT);'+
-			@myNewLine+	N'INSERT INTO #IndexCommands (SQLStatement, CommandsType, Fragmentation,IndexTotalSizeMB)'+
+			@myNewLine+	N'CREATE TABLE #IndexCommands (ID int IDENTITY, TableName nvarchar(128), IndexName nvarchar(128), SQLStatement nvarchar(max),CommandsType nvarchar(50),Fragmentation float, IndexTotalRowCount int, IndexTotalSizeMB float);'+
+			@myNewLine+	N'INSERT INTO #IndexCommands (TableName, IndexName, SQLStatement, CommandsType, Fragmentation, IndexTotalRowCount, IndexTotalSizeMB)'+
 			@myNewLine+	N'	SELECT'+
+			@myNewLine+	N'		myCore3.FullTableName,'+
+			@myNewLine+	N'		myCore3.FullIndexName,'+
 			@myNewLine+	N'		myCore3.CommandStr + CASE '+
 			@myNewLine+	N'				WHEN myCore3.CommandsType = N''REORGANIZE'' AND LEN(myCore3.WithStrReorganize)>0 THEN N'' WITH ('' + RIGHT(myCore3.WithStrReorganize,LEN(myCore3.WithStrReorganize)-1)+'')'' '+
 			@myNewLine+	N'				WHEN myCore3.CommandsType = N''REBUILD'' AND LEN(myCore3.WithStrRebuild)>0 THEN N'' WITH ('' + RIGHT(myCore3.WithStrRebuild,LEN(myCore3.WithStrRebuild)-1)+'')'' '+
@@ -127,6 +135,7 @@ BEGIN
 			@myNewLine+	N'			END + '';'' As SQLStatement, '+
 			@myNewLine+	N'		myCore3.CommandsType,'+
 			@myNewLine+	N'		myCore3.Fragmentation,'+
+			@myNewLine+	N'		myCore3.IndexTotalRowCount,'+
 			@myNewLine+	N'		myCore3.IndexTotalSizeMB'+
 			@myNewLine+	N'	FROM'+
 			@myNewLine+	N'		('+
@@ -141,8 +150,11 @@ BEGIN
 			@myNewLine+	N'							ELSE N''PRINT'''+
 			@myNewLine+	N'						END,'+
 			@myNewLine+	N'			myCore2.[object_id],'+
+			@myNewLine+	N'			myCore2.FullTableName,'+
 			@myNewLine+	N'			myCore2.index_id,'+
+			@myNewLine+	N'			myCore2.FullIndexName,'+
 			@myNewLine+	N'			myCore2.Fragmentation,'+
+			@myNewLine+	N'			myCore2.IndexTotalRowCount,'+
 			@myNewLine+	N'			myCore2.IndexTotalSizeMB'+
 			@myNewLine+	N'		FROM'+
 			@myNewLine+	N'			('+
@@ -179,8 +191,11 @@ BEGIN
 			@myNewLine+	N'				WithDataCompression='',DATA_COMPRESSION = '' + CASE myCore1.CompressionType WHEN 0 THEN ''NONE'' WHEN 1 THEN ''ROW'' WHEN 2 THEN ''PAGE'' WHEN 3 THEN ''COLUMNSTORE'' ELSE ''NONE'' END,'+
 			@myNewLine+	N'				WithCompressRowGroups=CASE WHEN myCore1.IndexType IN (5,6,7) THEN '',COMPRESS_ALL_ROW_GROUPS = ON'' ELSE '''' END,'+
 			@myNewLine+	N'				myCore1.[object_id],'+
+			@myNewLine+	N'				myCore1.FullTableName,'+
 			@myNewLine+	N'				myCore1.index_id,'+
+			@myNewLine+	N'				myCore1.FullIndexName,'+
 			@myNewLine+	N'				myCore1.Fragmentation,'+
+			@myNewLine+	N'				myCore1.IndexTotalRowCount,'+
 			@myNewLine+	N'				myCore1.IndexTotalSizeMB'+
 			@myNewLine+	N'			FROM'+
 			@myNewLine+	N'				('+
@@ -198,7 +213,7 @@ BEGIN
 			@myNewLine+	N'						myIndexes.index_id,'+
 			@myNewLine+	N'						myIndexes.type as IndexType,'+
 			@myNewLine+	N'						mySchemas.name as SchemaName,'+
-			@myNewLine+	N'						myTables.name as TableName,'+
+			@myNewLine+	N'						myTables.NAME as TableName,'+
 			@myNewLine+	N'						myIndexes.name as IndexName,'+
 			@myNewLine+	N'						mySpace.type as PartitionType,						--FG=Filegroup,PS=PartitionScheme'+
 			@myNewLine+	N'						myStats.partition_number as PartitionNo,'+
@@ -311,6 +326,7 @@ BEGIN
 			CAST(CASE WHEN @PrintOnly=1 THEN @myNewLine+N'*/' ELSE N'' END AS NVARCHAR(MAX)) +	--for Print only Command, Comment execution
 			CAST(CASE WHEN @PrintOnly=1 THEN @myNewLine+N'SELECT * FROM #IndexCommands ORDER BY CommandsType, Fragmentation DESC;' ELSE N'' END AS NVARCHAR(MAX)) +	--for Print only Command, Return commands list
 			@myNewLine+	N'DROP TABLE #IndexCommands;'+
+			@myNewLine+	N'DROP TABLE #ObjectTable;'+
 			@myNewLine+	N'DROP TABLE #PhysicalStat;'
 			AS NVARCHAR(MAX))
 
@@ -318,7 +334,7 @@ BEGIN
 		IF @PrintOnly=0
 			PRINT (@myNewLine + '--Excexution Report--');
 
-		IF @Database_IsReadOnly=0 AND @PrintOnly=0
+		IF @Database_IsReadOnly=0 
 		BEGIN
 			--=======Start of executing commands
 			BEGIN TRY
