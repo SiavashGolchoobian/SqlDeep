@@ -2,10 +2,8 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-
-
 -- =============================================
--- Author:		<Golchoobian>
+-- Author:		<Golchoobian + Saffarpour>
 -- Create date: <1/25/2015>
 -- Version:		<3.0.0.5>
 -- Description:	<Backup database>
@@ -163,9 +161,9 @@ BEGIN
 				SET @mySQLScript=@mySQLScript+
 					CAST(
 					@myNewLine+N'SELECT '+
-					@myNewLine+N'	@myDatabase_LogSizeGB=SUM(CASE WHEN [myDBFiles].[type] = 1 THEN [myDBFiles].[size] ELSE 0 END)*8/(1024*1024),'+
-					@myNewLine+N'	@myDatabase_RowSizeGB=SUM(CASE WHEN [myDBFiles].[type] IN (0,3,4) THEN [myDBFiles].[size] ELSE 0 END)*8/(1024*1024),'+
-					@myNewLine+N'	@myDatabase_FilestreamSizeGB=SUM(CASE WHEN [myDBFiles].[type] = 2 THEN [myDBFiles].[size] ELSE 0 END)*8/(1024*1024)'+
+					@myNewLine+N'	@myDatabase_LogSizeGB=SUM(CASE WHEN [myDBFiles].[type] = 1 THEN [myDBFiles].[size] ELSE 0 END)*CAST(8 AS BIGINT)/(1024*1024),'+
+					@myNewLine+N'	@myDatabase_RowSizeGB=SUM(CASE WHEN [myDBFiles].[type] IN (0,3,4) THEN [myDBFiles].[size] ELSE 0 END)*CAST(8 AS BIGINT)/(1024*1024),'+
+					@myNewLine+N'	@myDatabase_FilestreamSizeGB=SUM(CASE WHEN [myDBFiles].[type] = 2 THEN [myDBFiles].[size] ELSE 0 END)*CAST(8 AS BIGINT)/(1024*1024)'+
 					@myNewLine+N'FROM ' + CAST(QUOTENAME(@myDatabase_Name) AS NVARCHAR(MAX)) + N'.[sys].[database_files] AS myDBFiles' 
 					AS NVARCHAR(MAX))
 				BEGIN TRY
