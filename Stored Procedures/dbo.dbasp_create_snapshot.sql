@@ -41,7 +41,7 @@ BEGIN
 				INSERT INTO @SnapshotArray
 				SELECT 
 					'(NAME = ''' + myDbFiles.name + 
-					''', FileName=''' + @SnapshotFolderLocation + '\'+ @SnapshotNameSuffix +'_' + myDbFiles.[name] + '_' + CAST(myDbFiles.file_id as nvarchar) + '.snp'')' 
+					''', FileName=''' + @SnapshotFolderLocation + '\'+ @SnapshotNameSuffix +'_' + myDbFiles.[name] + '_' + CAST(myDbFiles.file_id as nvarchar) + '_' + CAST(NEWID() AS NVARCHAR(50)) + '.snp'')' 
 				FROM 
 					sys.master_files as myDbFiles 
 				WHERE 
