@@ -8,7 +8,7 @@ GO
 -- =============================================
 -- Author:		<Golchoobian>
 -- Create date: <1/21/2015>
--- Version:		<3.0.0.0>
+-- Version:		<3.0.0.1>
 -- Description:	<Create database snapshot>
 -- Input Parameters:
 --	@DatabaseNames:				'<ALL_USER_DATABASES>' or '<ALL_SYSTEM_DATABASES>' or '<ALL_DATABASES>' or 'dbname1,dbname2,...,dbnameN'
@@ -29,8 +29,6 @@ BEGIN
 	DECLARE @SqlCmd nvarchar(MAX);
 	DECLARE @myCursor Cursor;
 	
-	SET @SqlCmd=CAST(N'' AS NVARCHAR(MAX))
-
 	SET @myCursor=CURSOR For
 		Select [Name] FROM [dbo].[dbafn_database_list](@DatabaseNames,1,1,1,0,0)
 		
@@ -38,11 +36,12 @@ BEGIN
 	FETCH NEXT FROM @myCursor INTO @Database_Name
 			WHILE @@FETCH_STATUS=0
 			BEGIN
+				SET @SqlCmd=CAST(N'' AS NVARCHAR(MAX))
 				DELETE FROM @SnapshotArray
 				INSERT INTO @SnapshotArray
 				SELECT 
 					'(NAME = ''' + myDbFiles.name + 
-					''', FileName=''' + @SnapshotFolderLocation + '\'+ @SnapshotNameSuffix +'_' + myDbFiles.[name] + '_' + CAST(myDbFiles.file_id as nvarchar) + '.snp'')' 
+					''', FileName=''' + @SnapshotFolderLocation + '\'+ @SnapshotNameSuffix +'_' + myDbFiles.[name] + '_' + CAST(myDbFiles.file_id as nvarchar) + '_' + CAST(NEWID() AS NVARCHAR(50)) + '.snp'')' 
 				FROM 
 					sys.master_files as myDbFiles 
 				WHERE 

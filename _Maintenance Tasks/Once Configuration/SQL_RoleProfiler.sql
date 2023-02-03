@@ -1,0 +1,10 @@
+USE [master]
+GO
+CREATE SERVER ROLE [Role_Profiler]
+GO
+GRANT ALTER TRACE TO [Role_Profiler]
+GO
+GRANT CONNECT SQL TO [Role_Profiler]
+GO
+GRANT VIEW SERVER STATE TO [Role_Profiler]
+GO
