@@ -7,7 +7,7 @@ GO
 -- =============================================
 -- Author:		<Microsoft + Siavash Golchoobian>
 -- Create date: <5/10/2017>
--- Version:		<3.0.0.0>
+-- Version:		<3.0.0.1>
 -- Description:	<Generate Create or Alter Script for logins>
 -- =============================================
 CREATE FUNCTION [dbo].[dbafn_help_revlogin]
@@ -56,8 +56,8 @@ IF (@login_name IS NULL)
 			l.hasaccess, 
 			l.denylogin 
 		FROM 
-			sys.server_principals AS p 
-			LEFT JOIN sys.syslogins AS l ON ( l.name = p.name ) 
+			sys.server_principals AS p WITH (READPAST)
+			LEFT JOIN sys.syslogins AS l WITH (READPAST) ON ( l.name = p.name ) 
 		WHERE 
 			p.type IN ( 'S', 'G', 'U' ) 
 			AND p.name <> 'sa'
@@ -74,8 +74,8 @@ ELSE
 			l.hasaccess, 
 			l.denylogin 
 		FROM 
-			sys.server_principals AS p 
-			LEFT JOIN sys.syslogins AS l ON ( l.name = p.name ) 
+			sys.server_principals AS p WITH (READPAST)
+			LEFT JOIN sys.syslogins AS l WITH (READPAST) ON ( l.name = p.name ) 
 		WHERE 
 			p.type IN ( 'S', 'G', 'U' ) 
 			AND p.name = @login_name
@@ -104,7 +104,7 @@ ELSE
 			--Print @tmpstr
 			IF (@type IN ( 'G', 'U'))
 				BEGIN	--STEP B1:NT authenticated account/group
-				SET @tmpstrCreate = N'IF(SELECT [state] FROM sys.[databases] WHERE [name]=''' + @defaultdb + N''')=0' +
+				SET @tmpstrCreate = N'IF(SELECT [state] FROM sys.[databases] WITH (READPAST) WHERE [name]=''' + @defaultdb + N''')=0' +
 								@myNewLine + N'	BEGIN'+
 								@myNewLine + N'		CREATE LOGIN ' + QUOTENAME( @name ) + N' FROM WINDOWS WITH DEFAULT_DATABASE = [' + @defaultdb + N']'+
 								@myNewLine + N'	END'+
@@ -112,11 +112,11 @@ ELSE
 								@myNewLine + N'	BEGIN'+
 								@myNewLine + N'		CREATE LOGIN ' + QUOTENAME( @name ) + N' FROM WINDOWS'+
 								@myNewLine + N'	END'
-				SET @tmpstrAlter = N'IF(SELECT [state] FROM sys.[databases] WHERE [name]=''' + @defaultdb + N''')=0' +
+				SET @tmpstrAlter = N'IF(SELECT [state] FROM sys.[databases] WITH (READPAST) WHERE [name]=''' + @defaultdb + N''')=0' +
 								@myNewLine + N'	BEGIN'+
 								@myNewLine + N'		ALTER LOGIN ' + QUOTENAME( @name ) + N' WITH DEFAULT_DATABASE = [' + @defaultdb + N']'+
 								@myNewLine + N'	END'
-				SET @tmpstr =	N'IF NOT EXISTS (SELECT 1 FROM sys.[server_principals] AS myServerLogins WHERE myServerLogins.[name] = N''' + @name + N''')' + 
+				SET @tmpstr =	N'IF NOT EXISTS (SELECT 1 FROM sys.[server_principals] AS myServerLogins WITH (READPAST) WHERE myServerLogins.[name] = N''' + @name + N''')' + 
 								@myNewLine + N'BEGIN' +
 								@myNewLine + @myNewTab + @tmpstrCreate +
 								@myNewLine + N'END' +
@@ -135,7 +135,7 @@ ELSE
 				SELECT @is_policy_checked = CASE is_policy_checked WHEN 1 THEN N'ON' WHEN 0 THEN N'OFF' ELSE NULL END FROM sys.sql_logins WHERE name = @name
 				SELECT @is_expiration_checked = CASE is_expiration_checked WHEN 1 THEN N'ON' WHEN 0 THEN N'OFF' ELSE NULL END FROM sys.sql_logins WHERE name = @name
 
-				SET @tmpstrCreate = N'IF(SELECT [state] FROM sys.[databases] WHERE [name]=''' + @defaultdb + N''')=0' +
+				SET @tmpstrCreate = N'IF(SELECT [state] FROM sys.[databases] WITH (READPAST) WHERE [name]=''' + @defaultdb + N''')=0' +
 								@myNewLine + N'	BEGIN'+
 								@myNewLine + N'		CREATE LOGIN ' + QUOTENAME( @name ) + N' WITH PASSWORD = ' + @PWD_string + N' HASHED, SID = ' + @SID_string + N', DEFAULT_DATABASE = [' + @defaultdb + N']'+
 								@myNewLine + N'	END'+
@@ -143,7 +143,7 @@ ELSE
 								@myNewLine + N'	BEGIN'+
 								@myNewLine + N'		CREATE LOGIN ' + QUOTENAME( @name ) + N' WITH PASSWORD = ' + @PWD_string + N' HASHED, SID = ' + @SID_string +
 								@myNewLine + N'	END'
-				SET @tmpstrAlter = N'IF(SELECT [state] FROM sys.[databases] WHERE [name]=''' + @defaultdb + N''')=0' +
+				SET @tmpstrAlter = N'IF(SELECT [state] FROM sys.[databases] WITH (READPAST) WHERE [name]=''' + @defaultdb + N''')=0' +
 								@myNewLine + N'	BEGIN'+
 								@myNewLine + N'		ALTER LOGIN ' + QUOTENAME( @name ) + N' WITH PASSWORD = ' + @PWD_string + N' HASHED, DEFAULT_DATABASE = [' + @defaultdb + N']'+
 								@myNewLine + N'	END'+
@@ -166,7 +166,7 @@ ELSE
 					--SET @tmpstrAlter = @tmpstrAlter + ', CHECK_EXPIRATION = ' + 'OFF'	--@is_expiration_checked: The CHECK_EXPIRATION option cannot be used when CHECK_POLICY is OFF.
 					END		--STEP B4
 
-				SET @tmpstr =	N'IF NOT EXISTS (SELECT 1 FROM sys.[server_principals] AS myServerLogins WHERE myServerLogins.[name] = N''' + @name + ''')' + 
+				SET @tmpstr =	N'IF NOT EXISTS (SELECT 1 FROM sys.[server_principals] AS myServerLogins WITH (READPAST) WHERE myServerLogins.[name] = N''' + @name + ''')' + 
 								@myNewLine + N'BEGIN' +
 								@myNewLine + @myNewTab + @tmpstrCreate +
 								@myNewLine + @myNewTab + @tmpstrPolicyAfter +
