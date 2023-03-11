@@ -69,7 +69,7 @@ BEGIN
 				) WITH LOG;
 		END
 
-	IF @EmailError=1 AND @MailTo IS NOT NULL
+	IF @EmailError=1 AND @MailTo IS NOT NULL AND EXISTS (SELECT 1 FROM sys.configurations WHERE NAME = 'Database Mail XPs' AND CAST ([value_in_use] AS INT) = 1)
 		BEGIN
 			DECLARE @EmailMessage nvarchar(4000)
 			SET @EmailMessage =
