@@ -103,9 +103,9 @@ AS
 			SET @mySQLScript=@mySQLScript+
 				CAST(
 				@myNewLine+N'SELECT '+
-				@myNewLine+N'	@myTotal_LogSize_KB=SUM(CASE WHEN [myDBFiles].[type] = 1 THEN [myDBFiles].[size] ELSE 0 END)*8,'+
-				@myNewLine+N'	@myTotal_RowSize_KB=SUM(CASE WHEN [myDBFiles].[type] IN (0,3,4) THEN [myDBFiles].[size] ELSE 0 END)*8,'+
-				@myNewLine+N'	@myTotal_FilestreamSize_KB=SUM(CASE WHEN [myDBFiles].[type] = 2 THEN [myDBFiles].[size] ELSE 0 END)*8'+
+				@myNewLine+N'	@myTotal_LogSize_KB=SUM(CAST(CASE WHEN [myDBFiles].[type] = 1 THEN [myDBFiles].[size] ELSE 0 END AS FLOAT))*8,'+
+				@myNewLine+N'	@myTotal_RowSize_KB=SUM(CAST(CASE WHEN [myDBFiles].[type] IN (0,3,4) THEN [myDBFiles].[size] ELSE 0 END AS FLOAT))*8,'+
+				@myNewLine+N'	@myTotal_FilestreamSize_KB=SUM(CAST(CASE WHEN [myDBFiles].[type] = 2 THEN [myDBFiles].[size] ELSE 0 END AS FLOAT))*8'+
 				@myNewLine+N'FROM ' + CAST(QUOTENAME(@myDatabase_Name) AS NVARCHAR(MAX)) + N'.[sys].[database_files] AS myDBFiles' 
 				AS NVARCHAR(MAX))
 			BEGIN TRY
