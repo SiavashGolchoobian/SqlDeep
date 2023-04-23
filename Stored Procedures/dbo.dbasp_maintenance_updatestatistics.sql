@@ -12,7 +12,7 @@ GO
 -- Description:	<Update whole database necessary object(table/indexed views) statistics>
 -- Input Parameters:
 --	@DatabaseNames:	'<ALL_USER_DATABASES>' or '<ALL_SYSTEM_DATABASES>' or '<ALL_DATABASES>' or 'dbname1,dbname2,...,dbnameN'
---	@FilterTables:	'<ALL_TABLES>'or comma seperated FQDN table names like '[myDB1].[mySchema1].[myTable1],[myDB2].[mySchema2].[myTable2]'
+--	@FilterTables:	'<ALL_TABLES>'or FQDN table name like '[myDB1].[mySchema1].[myTable1],[myDB2].[mySchema2].[myTable2]'
 --	@IgnoreStatsUpdatedInLastXHours:	Ignore updating stats if last update is for last @IgnoreStatsUpdatedInLastXHours hours
 --	@UnusedStatTresholdInDays:			Ignore updating stats if last update of that index is latest than @UnusedStatTresholdInDays days
 -- =============================================
@@ -27,10 +27,22 @@ BEGIN
 	SET NOCOUNT ON;
 	DECLARE @myCursor Cursor;
 	DECLARE @Database_Name nvarchar(255);
+	DECLARE @myTablesFilter NVARCHAR(MAX);
 	DECLARE @mySQLScript NVARCHAR(max);
 	DECLARE @myNewLine nvarchar(10);
 	
 	SET @myNewLine=CHAR(13)+CHAR(10)
+	SET @myTablesFilter=CAST(N'' AS NVARCHAR(MAX))
+	IF UPPER(@FilterTables) <> N'<ALL_TABLES>'
+	BEGIN
+		SELECT @myTablesFilter=@myTablesFilter+CAST(''''+TRIM(REPLACE(REPLACE(Parameter,CHAR(10),''),CHAR(13),''))+'''' AS NVARCHAR(MAX))+',' FROM [dbo].[dbafn_split](',',@FilterTables)
+		SET @myTablesFilter=CASE WHEN RIGHT(@myTablesFilter,1)=',' THEN LEFT(@myTablesFilter,LEN(@myTablesFilter)-1) ELSE @myTablesFilter END
+	END
+	ELSE
+	BEGIN
+		SET @myTablesFilter = N'<ALL_TABLES>'
+	END
+
     SET @myCursor=CURSOR For
 		Select [Name] FROM [dbo].[dbafn_database_list](@DatabaseNames,1,1,1,1,1)
 
@@ -88,8 +100,8 @@ BEGIN
 				@myNewLine + N'		[myObjects].[is_ms_shipped]=0																				-- Only application indexes'+
 				@myNewLine + N'		AND ([myStatProperties].[rows]>100 /*OR [myStatProperties].[rows] IS NULL*/)								-- Only indexes with at least 100 rows'+
 				@myNewLine + N'		AND ([myStatProperties].[modification_counter]>0 /*OR [myStatProperties].[modification_counter] IS NULL*/)	-- Only indexes with changed data'+
-				CASE WHEN UPPER(@FilterTables) <> '<ALL_TABLES>' THEN
-					@myNewLine + N'		AND (QUOTENAME(DB_NAME())+''.''+QUOTENAME([mySchema].[name])+''.''+QUOTENAME([myObjects].[name]) IN ('''+CAST(REPLACE(@FilterTables,',',''',''') AS NVARCHAR(MAX))+'''))	-- Only Specified Tables are selected'
+				CASE WHEN UPPER(@myTablesFilter) <> '<ALL_TABLES>' THEN
+					@myNewLine + N'		AND (QUOTENAME(DB_NAME())+''.''+QUOTENAME([mySchema].[name])+''.''+QUOTENAME([myObjects].[name]) IN ('+CAST(@myTablesFilter AS NVARCHAR(MAX))+'))	-- Only Specified Tables are selected'
 				ELSE CAST(N'' AS NVARCHAR(MAX)) END +
 				@myNewLine + N'	) AS myStatData'+
 				@myNewLine + N'WHERE'+
