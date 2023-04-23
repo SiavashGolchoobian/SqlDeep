@@ -68,10 +68,18 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Update S
 		@retry_attempts=0, 
 		@retry_interval=0, 
 		@os_run_priority=0, @subsystem=N'TSQL', 
-		@command=N'DECLARE @DatabaseNames nvarchar(max) = ''<ALL_DATABASES>''
+		@command=N'DECLARE @DatabaseNames nvarchar(max)=N''<ALL_DATABASES>''
+DECLARE @FilterTables NVARCHAR(MAX) = N''<ALL_TABLES>''
+DECLARE @IgnoreStatsUpdatedInLastXHours int=6
+DECLARE @UnusedStatTresholdInDays int=365
 DECLARE @PrintOnly bit=0
 
-EXECUTE [dbo].[dbasp_maintenance_updatestatistics] @DatabaseNames,@PrintOnly', 
+EXECUTE [dbo].[dbasp_maintenance_updatestatistics] 
+   @DatabaseNames
+  ,@FilterTables
+  ,@IgnoreStatsUpdatedInLastXHours
+  ,@UnusedStatTresholdInDays
+  ,@PrintOnly', 
 		@database_name=N'SqlDeep', 
 		@flags=0
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
