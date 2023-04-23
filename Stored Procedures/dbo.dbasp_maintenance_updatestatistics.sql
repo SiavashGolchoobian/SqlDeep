@@ -4,6 +4,7 @@ SET ANSI_NULLS ON
 GO
 
 
+
 -- =============================================
 -- Author:		<Ian Stirk + Golchoobian>
 -- Create date: <01/21/2015>
@@ -11,11 +12,13 @@ GO
 -- Description:	<Update whole database necessary object(table/indexed views) statistics>
 -- Input Parameters:
 --	@DatabaseNames:	'<ALL_USER_DATABASES>' or '<ALL_SYSTEM_DATABASES>' or '<ALL_DATABASES>' or 'dbname1,dbname2,...,dbnameN'
+--	@FilterTables:	'<ALL_TABLES>'or comma seperated FQDN table names like '[myDB1].[mySchema1].[myTable1],[myDB2].[mySchema2].[myTable2]'
 --	@IgnoreStatsUpdatedInLastXHours:	Ignore updating stats if last update is for last @IgnoreStatsUpdatedInLastXHours hours
 --	@UnusedStatTresholdInDays:			Ignore updating stats if last update of that index is latest than @UnusedStatTresholdInDays days
 -- =============================================
 CREATE PROCEDURE [dbo].[dbasp_maintenance_updatestatistics]
 	@DatabaseNames NVARCHAR(MAX) = N'<ALL_USER_DATABASES>',
+	@FilterTables NVARCHAR(MAX) = N'<ALL_TABLES>',
 	@IgnoreStatsUpdatedInLastXHours INT = 6,
 	@UnusedStatTresholdInDays INT=32,
 	@PrintOnly BIT=0
@@ -76,7 +79,7 @@ BEGIN
 				@myNewLine + N'			ELSE ''3000000 ROWS'''+
 				@myNewLine + N'		END AS SampleValue'+
 				@myNewLine + N'	FROM'+
-				@myNewLine + N'		sys.[stats] AS myStatList'+
+				@myNewLine + N'		[sys].[stats] AS myStatList'+
 				@myNewLine + N'		INNER JOIN [sys].[all_objects] AS myObjects ON [myObjects].[object_id] = [myStatList].[object_id]'+
 				@myNewLine + N'		INNER JOIN [sys].[schemas] AS mySchema ON [mySchema].[schema_id] = [myObjects].[schema_id]'+
 				@myNewLine + N'		LEFT OUTER JOIN [sys].[indexes] AS myIndex ON [myIndex].[object_id] = [myStatList].[object_id] AND [myIndex].[name] = [myStatList].[name]'+
@@ -85,6 +88,9 @@ BEGIN
 				@myNewLine + N'		[myObjects].[is_ms_shipped]=0																				-- Only application indexes'+
 				@myNewLine + N'		AND ([myStatProperties].[rows]>100 /*OR [myStatProperties].[rows] IS NULL*/)								-- Only indexes with at least 100 rows'+
 				@myNewLine + N'		AND ([myStatProperties].[modification_counter]>0 /*OR [myStatProperties].[modification_counter] IS NULL*/)	-- Only indexes with changed data'+
+				CASE WHEN UPPER(@FilterTables) <> '<ALL_TABLES>' THEN
+					@myNewLine + N'		AND (QUOTENAME(DB_NAME())+''.''+QUOTENAME([mySchema].[name])+''.''+QUOTENAME([myObjects].[name]) IN ('''+CAST(REPLACE(@FilterTables,',',''',''') AS NVARCHAR(MAX))+'''))	-- Only Specified Tables are selected'
+				ELSE CAST(N'' AS NVARCHAR(MAX)) END +
 				@myNewLine + N'	) AS myStatData'+
 				@myNewLine + N'WHERE'+
 				@myNewLine + N'	[myStatData].[IsIndexDisabled]=0																				-- Dont touch to stats related to disabled indexes'+
@@ -148,7 +154,7 @@ EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'dbo',
 GO
 EXEC sp_addextendedproperty N'Created Date', N'2015-01-21', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_updatestatistics', NULL, NULL
 GO
-EXEC sp_addextendedproperty N'Modified Date', N'2020-04-01', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_updatestatistics', NULL, NULL
+EXEC sp_addextendedproperty N'Modified Date', N'2023-04-23', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_updatestatistics', NULL, NULL
 GO
-EXEC sp_addextendedproperty N'Version', N'3.0.1.0', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_updatestatistics', NULL, NULL
+EXEC sp_addextendedproperty N'Version', N'3.0.1.1', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_updatestatistics', NULL, NULL
 GO
