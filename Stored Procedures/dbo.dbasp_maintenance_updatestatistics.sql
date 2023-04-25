@@ -35,7 +35,7 @@ BEGIN
 	SET @myTablesFilter=CAST(N'' AS NVARCHAR(MAX))
 	IF UPPER(@FilterTables) <> N'<ALL_TABLES>'
 	BEGIN
-		SELECT @myTablesFilter=@myTablesFilter+CAST(''''+TRIM(REPLACE(REPLACE(Parameter,CHAR(10),''),CHAR(13),''))+'''' AS NVARCHAR(MAX))+',' FROM [dbo].[dbafn_split](',',@FilterTables)
+		SELECT @myTablesFilter=@myTablesFilter+CAST(''''+RTRIM(LTRIM(REPLACE(REPLACE(Parameter,CHAR(10),''),CHAR(13),'')))+'''' AS NVARCHAR(MAX))+',' FROM [dbo].[dbafn_split](',',@FilterTables)
 		SET @myTablesFilter=CASE WHEN RIGHT(@myTablesFilter,1)=',' THEN LEFT(@myTablesFilter,LEN(@myTablesFilter)-1) ELSE @myTablesFilter END
 	END
 	ELSE
