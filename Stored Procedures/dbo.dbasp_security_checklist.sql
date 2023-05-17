@@ -5371,8 +5371,8 @@ WHERE
                 JOIN #Palavras_Exec C WITH(NOLOCK) ON A.[definition] COLLATE SQL_Latin1_General_CP1_CI_AI LIKE C.Palavra
             WHERE
                 B.is_ms_shipped = 0
-                AND ''?'' <> ''ReportServer''
-                AND B.[name] NOT IN (''stpChecklist_Seguranca'', ''stpSecurity_Checklist'', ''sp_WhoIsActive'', ''sp_showindex'', ''sp_AllNightLog'', ''sp_AllNightLog_Setup'', ''sp_Blitz'', ''sp_BlitzBackups'', ''sp_BlitzCache'', ''sp_BlitzFirst'', ''sp_BlitzIndex'', ''sp_BlitzLock'', ''sp_BlitzQueryStore'', ''sp_BlitzWho'', ''sp_DatabaseRestore'')
+                AND ''?'' NOT IN (''ReportServer'',''SqlDeep'')
+                --AND B.[name] NOT IN (''stpChecklist_Seguranca'', ''stpSecurity_Checklist'', ''sp_WhoIsActive'', ''sp_showindex'', ''sp_AllNightLog'', ''sp_AllNightLog_Setup'', ''sp_Blitz'', ''sp_BlitzBackups'', ''sp_BlitzCache'', ''sp_BlitzFirst'', ''sp_BlitzIndex'', ''sp_BlitzLock'', ''sp_BlitzQueryStore'', ''sp_BlitzWho'', ''sp_DatabaseRestore'')
                 AND NOT (B.[name] LIKE ''stp_DTA_%'' AND ''?'' = ''msdb'')
                 AND NOT (B.[name] = ''sp_readrequest'' AND ''?'' = ''master'')
                 AND EXISTS (
@@ -5454,8 +5454,8 @@ WHERE
                 JOIN [?].sys.objects B WITH(NOLOCK) ON B.[object_id] = A.[object_id]
             WHERE
                 B.is_ms_shipped = 0
-                AND ''?'' <> ''ReportServer''
-                AND B.[name] NOT IN (''stpChecklist_Seguranca'', ''stpSecurity_Checklist'', ''sp_WhoIsActive'', ''sp_showindex'', ''sp_AllNightLog'', ''sp_AllNightLog_Setup'', ''sp_Blitz'', ''sp_BlitzBackups'', ''sp_BlitzCache'', ''sp_BlitzFirst'', ''sp_BlitzIndex'', ''sp_BlitzLock'', ''sp_BlitzQueryStore'', ''sp_BlitzWho'', ''sp_DatabaseRestore'')
+                AND ''?'' NOT IN (''ReportServer'',''SqlDeep'')
+                --AND B.[name] NOT IN (''stpChecklist_Seguranca'', ''stpSecurity_Checklist'', ''sp_WhoIsActive'', ''sp_showindex'', ''sp_AllNightLog'', ''sp_AllNightLog_Setup'', ''sp_Blitz'', ''sp_BlitzBackups'', ''sp_BlitzCache'', ''sp_BlitzFirst'', ''sp_BlitzIndex'', ''sp_BlitzLock'', ''sp_BlitzQueryStore'', ''sp_BlitzWho'', ''sp_DatabaseRestore'')
                 AND A.definition LIKE ''%xp_cmdshell%''
     
         END'
@@ -5527,7 +5527,7 @@ WHERE
                 JOIN [?].sys.objects B WITH(NOLOCK) ON B.[object_id] = A.[object_id]
             WHERE
                 B.is_ms_shipped = 0
-                AND ''?'' <> ''ReportServer''
+                AND ''?'' NOT IN (''ReportServer'',''SqlDeep'')
                 AND B.[name] NOT IN (''stpChecklist_Seguranca'', ''stpSecurity_Checklist'', ''sp_WhoIsActive'', ''sp_showindex'', ''sp_AllNightLog'', ''sp_AllNightLog_Setup'', ''sp_Blitz'', ''sp_BlitzBackups'', ''sp_BlitzCache'', ''sp_BlitzFirst'', ''sp_BlitzIndex'', ''sp_BlitzLock'', ''sp_BlitzQueryStore'', ''sp_BlitzWho'', ''sp_DatabaseRestore'')
                 AND B.[name] NOT IN (''dt_addtosourcecontrol'', ''dt_addtosourcecontrol_u'', ''dt_adduserobject'', ''dt_adduserobject_vcs'', ''dt_checkinobject'', ''dt_checkinobject_u'', ''dt_checkoutobject'', ''dt_checkoutobject_u'', ''dt_displayoaerror'', ''dt_displayoaerror_u'', ''dt_droppropertiesbyid'', ''dt_dropuserobjectbyid'', ''dt_generateansiname'', ''dt_getobjwithprop'', ''dt_getobjwithprop_u'', ''dt_getpropertiesbyid'', ''dt_getpropertiesbyid_u'', ''dt_getpropertiesbyid_vcs'', ''dt_getpropertiesbyid_vcs_u'', ''dt_isundersourcecontrol'', ''dt_isundersourcecontrol_u'', ''dt_removefromsourcecontrol'', ''dt_setpropertybyid'', ''dt_setpropertybyid_u'', ''dt_validateloginparams'', ''dt_validateloginparams_u'', ''dt_vcsenabled'', ''dt_verstamp006'', ''dt_verstamp007'', ''dt_whocheckedout'', ''dt_whocheckedout_u'')
                 AND A.definition LIKE ''%sp_OACreate%''
@@ -5665,7 +5665,7 @@ WHERE
             WHERE
                 B.is_ms_shipped = 0
                 AND A.definition LIKE ''%GRANT %''
-                AND ''?'' NOT IN (''master'', ''ReportServer'')
+                AND ''?'' NOT IN (''master'', ''ReportServer'',''SqlDeep'')
                 AND B.[name] NOT IN (''dt_addtosourcecontrol'', ''dt_addtosourcecontrol_u'', ''dt_adduserobject'', ''dt_adduserobject_vcs'', ''dt_checkinobject'', ''dt_checkinobject_u'', ''dt_checkoutobject'', ''dt_checkoutobject_u'', ''dt_displayoaerror'', ''dt_displayoaerror_u'', ''dt_droppropertiesbyid'', ''dt_dropuserobjectbyid'', ''dt_generateansiname'', ''dt_getobjwithprop'', ''dt_getobjwithprop_u'', ''dt_getpropertiesbyid'', ''dt_getpropertiesbyid_u'', ''dt_getpropertiesbyid_vcs'', ''dt_getpropertiesbyid_vcs_u'', ''dt_isundersourcecontrol'', ''dt_isundersourcecontrol_u'', ''dt_removefromsourcecontrol'', ''dt_setpropertybyid'', ''dt_setpropertybyid_u'', ''dt_validateloginparams'', ''dt_validateloginparams_u'', ''dt_vcsenabled'', ''dt_verstamp006'', ''dt_verstamp007'', ''dt_whocheckedout'', ''dt_whocheckedout_u'', ''stpChecklist_Seguranca'', ''stpSecurity_Checklist'')
             
         END'
