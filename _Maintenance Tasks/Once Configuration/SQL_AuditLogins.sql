@@ -14,11 +14,13 @@ ALTER SERVER AUDIT SqlDeep_TrackLogins WITH (STATE = ON);
 GO
 
 
-
+/*
 Note: if you encountered bellow error after enabling Server Audit on SECURITY_LOG, you should add sql server account to bellow path in Group Policy and Reset you SQL Services:
 	Computer Configurations > Windows Settings > Security Settings > Local Policies > User Right Assignments > Generate Security Audits
 	OR
 	Security Settings > Local Policies > User Right Assignments > Generate Security Audits
+*/
+
 /*
 TITLE: Microsoft.SqlServer.Smo
 ------------------------------
