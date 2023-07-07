@@ -3,11 +3,10 @@ GO
 SET ANSI_NULLS ON
 GO
 
-
 -- =============================================
 -- Author:		<Golchoobian>
 -- Create date: <5/26/2017>
--- Version:		<3.0.0.2>
+-- Version:		<3.0.0.3>
 -- Description:	<Log informations about sessions that not in SLEEPING mode and duration over than @GrabTransactionsOver_Second after Request [start_time]>
 -- Input Parameters:
 --	@GrabTransactionsOver_Second:	Any integer number, representing Seconds between Current time and Request Start time
@@ -24,6 +23,7 @@ BEGIN
 	DECLARE @myLogRetentionDays INT
 	DECLARE @mySqlServer2014SP2Version DECIMAL(10,5);
 	DECLARE @mySqlServer2014SP2BuildVersion NVARCHAR(20);
+	DECLARE @myIsSql2014SP2BuggyVersion BIT;
 	DECLARE @mySqlVersion DECIMAL(10,5);
 	DECLARE @mySqlBuildVersion NVARCHAR(20);
 
@@ -31,9 +31,14 @@ BEGIN
 	SET @mySqlVersion = CAST(LEFT(@mySqlBuildVersion,CHARINDEX('.', @mySqlBuildVersion)) AS DECIMAL(10,5))
 	SET @mySqlServer2014SP2BuildVersion = '12.0.5000.0'		-- SQL Server 2014 SP2
 	SET @mySqlServer2014SP2Version = 12.0					-- SQL Server 2014 SP2
+	SET @myIsSql2014SP2BuggyVersion = 0
 	SET @myLongDurationSecond=@GrabTransactionsOver_Second
 	SET @myLogRetentionDays=@LogRetentionDays
 	SET @myCurrentTime=GETDATE()
+
+	-------------------------Check for buggy version of SQL Server 2014 SP2 or over
+	IF NOT EXISTS (SELECT 1 FROM [master].[sys].[all_objects] WHERE [name]=N'dm_exec_input_buffer' AND [type]=N'IF')
+		SET @myIsSql2014SP2BuggyVersion = 1
 
 	-------------------------Create Table if not exists
 	IF NOT EXISTS (SELECT 1 FROM [INFORMATION_SCHEMA].[TABLES] WHERE [TABLE_NAME]='ActivityLogHistory')
@@ -89,7 +94,7 @@ BEGIN
 	END
 
 	-------------------------Fill monitoring table
-	IF @mySqlVersion >= @mySqlServer2014SP2Version AND @mySqlBuildVersion >= @mySqlServer2014SP2BuildVersion
+	IF @mySqlVersion >= @mySqlServer2014SP2Version AND @mySqlBuildVersion >= @mySqlServer2014SP2BuildVersion AND @myIsSql2014SP2BuggyVersion = 0
 	BEGIN	--For SQL Servers Equal and Above 2014 SP2
 		INSERT INTO [trace].[ActivityLogHistory]
 			([session_id],
