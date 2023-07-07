@@ -1,4 +1,3 @@
-/*
 CREATE SERVER AUDIT [SqlDeep_TrackLogins] TO APPLICATION_LOG WITH (QUEUE_DELAY = 1000, ON_FAILURE = CONTINUE)
 --CREATE SERVER AUDIT [SqlDeep_TrackLogins] TO SECURITY_LOG WITH (QUEUE_DELAY = 1000, ON_FAILURE = CONTINUE)	--Read bellow Note for resolving any encountered error
 GO
@@ -13,7 +12,6 @@ GO
 
 ALTER SERVER AUDIT SqlDeep_TrackLogins WITH (STATE = ON);
 GO
-*/
 
 /*
 Note: if you encountered bellow error after enabling Server Audit on SECURITY_LOG, you should add sql server account to bellow path in Group Policy and Reset you SQL Services:
