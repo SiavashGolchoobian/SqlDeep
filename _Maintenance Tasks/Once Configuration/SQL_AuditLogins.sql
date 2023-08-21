@@ -45,3 +45,6 @@ BUTTONS:
 OK
 ------------------------------
 */
+
+Resource:
+	https://support.microsoft.com/en-us/topic/kb4052136-fix-sql-server-audit-events-don-t-write-to-the-security-log-d9708450-6981-2fab-4e58-5f09d561110e
