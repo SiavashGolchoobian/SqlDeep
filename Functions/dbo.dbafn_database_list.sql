@@ -3,10 +3,11 @@ GO
 SET ANSI_NULLS ON
 GO
 
+
 -- =============================================
 -- Author:		<Golchoobian>
 -- Create date: <2/4/2015>
--- Version:		<3.0.0.0>
+-- Version:		<3.0.0.1>
 -- Description:	<Return list of related database names>
 -- Input Parameters:
 --	@DatabaseNames:			'<ALL_USER_DATABASES>' or '<ALL_SYSTEM_DATABASES>' or '<ALL_DATABASES>' or '<ALL_MIRROR_DATABASES>' or 'dbname1,dbname2,...,dbnameN' also you can use '<EXCLUDE:dbname1,dbname2,...,dbnameN>' and '<INCLUDE:dbname1,dbname2,...,dbnameN>' within only '<ALL_SYSTEM_DATABASES>' , '<ALL_SYSTEM_DATABASES>' and '<ALL_DATABASES>' syntax 
@@ -44,7 +45,7 @@ BEGIN
 	IF UPPER(@DatabaseNames) LIKE UPPER(N'<ALL_USER_DATABASES>%')
 	BEGIN
 		SET @ListIsGenerated=1
-		INSERT INTO @DatabaseList ([Name]) SELECT CAST([name] as nvarchar(255)) FROM sys.databases WHERE database_id>4	--Is in normal mode
+		INSERT INTO @DatabaseList ([Name]) SELECT CAST([name] as nvarchar(255)) FROM sys.databases WHERE database_id>4 and state <> 6	--Is in normal mode
 	END
 	
 	IF UPPER(@DatabaseNames) LIKE UPPER(N'<ALL_SYSTEM_DATABASES>%')
@@ -56,7 +57,7 @@ BEGIN
 	IF UPPER(@DatabaseNames) LIKE UPPER(N'<ALL_DATABASES>%')
 	BEGIN
 		SET @ListIsGenerated=1
-		INSERT INTO @DatabaseList ([Name]) SELECT CAST([name] as nvarchar(255)) FROM sys.databases
+		INSERT INTO @DatabaseList ([Name]) SELECT CAST([name] as nvarchar(255)) FROM sys.databases WHERE state <> 6
 	END
 
 	IF UPPER(@DatabaseNames) LIKE UPPER(N'<ALL_MIRROR_DATABASES>%')
@@ -128,13 +129,12 @@ BEGIN
 		DELETE FROM	@DatabaseList WHERE [Name] in (SELECT CAST([myDatabases].[name] collate arabic_ci_as as nvarchar(255)) FROM [sys].[databases] AS myDatabases INNER JOIN [sys].[dm_hadr_availability_replica_states] AS myReplicaStatus ON [myReplicaStatus].[replica_id] = [myDatabases].[replica_id] WHERE [myReplicaStatus].[role]=2)
 	RETURN 
 END
-
 GO
 EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'dbo', 'FUNCTION', N'dbafn_database_list', NULL, NULL
 GO
 EXEC sp_addextendedproperty N'Created Date', N'2015-02-04', 'SCHEMA', N'dbo', 'FUNCTION', N'dbafn_database_list', NULL, NULL
 GO
-EXEC sp_addextendedproperty N'Modified Date', N'2017-07-03', 'SCHEMA', N'dbo', 'FUNCTION', N'dbafn_database_list', NULL, NULL
+EXEC sp_addextendedproperty N'Modified Date', N'2023-09-11', 'SCHEMA', N'dbo', 'FUNCTION', N'dbafn_database_list', NULL, NULL
 GO
-EXEC sp_addextendedproperty N'Version', N'3.0.0.0', 'SCHEMA', N'dbo', 'FUNCTION', N'dbafn_database_list', NULL, NULL
+EXEC sp_addextendedproperty N'Version', N'3.0.0.1', 'SCHEMA', N'dbo', 'FUNCTION', N'dbafn_database_list', NULL, NULL
 GO
