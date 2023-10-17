@@ -1,3 +1,5 @@
+USE [master]
+GO
 CREATE SERVER AUDIT [SqlDeep_TrackLogins] TO APPLICATION_LOG WITH (QUEUE_DELAY = 1000, ON_FAILURE = CONTINUE)
 --CREATE SERVER AUDIT [SqlDeep_TrackLogins] TO SECURITY_LOG WITH (QUEUE_DELAY = 1000, ON_FAILURE = CONTINUE)	--Read bellow Note for resolving any encountered error
 GO
