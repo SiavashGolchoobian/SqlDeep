@@ -20,6 +20,12 @@ Note: if you encountered bellow error after enabling Server Audit on SECURITY_LO
 	Computer Configurations > Windows Settings > Security Settings > Local Policies > User Right Assignments > Generate Security Audits
 	OR
 	Security Settings > Local Policies > User Right Assignments > Generate Security Audits
+	
+	And after that if you dont find "MSSQL$<InstanceName>$Audit" path under "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\Security\" you needs to temporary get "Full Control Access" on HKLM\SYSTEM\CurrentControlSet\Services\EventLog\Security to SQL Service account, Once this was completed, back into SQL Server Management Studio and disabled and re-enabled the audit again.
+	Then Once the MSSQL$<InstanceName>$Audit key has been created under above reg path, you can remove the assigned permissions from the HKLM\SYSTEM\CurrentControlSet\Services\EventLog\Security key 
+	
+	And finally To enable multiple Server Audit Events to write to the SQL Server Security log, change the value of following registry subkey from 0 to 1:
+	HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\Security\MSSQL$<InstanceName>$Audit\EventSourceFlags
 */
 
 /*
@@ -50,3 +56,5 @@ OK
 
 Resource:
 	https://support.microsoft.com/en-us/topic/kb4052136-fix-sql-server-audit-events-don-t-write-to-the-security-log-d9708450-6981-2fab-4e58-5f09d561110e
+	https://www.sqlskills.com/blogs/jonathan/resolving-error-33204-sql-server-audit-could-not-write-to-the-security-log/
+	https://learn.microsoft.com/en-us/answers/questions/280882/sql-server-audit-failure-to-security-log
