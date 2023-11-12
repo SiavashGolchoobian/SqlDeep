@@ -1,0 +1,6 @@
+#	Set Application log size to 256MB and archive old files for 31 days only on bellow path:
+#	Archived logs are stored with actual logs under "%System32%\winevt\Logs" folder but archive logs file names are formed by the "Archive + <Event log name> + <Date> + <Time>.evtx" template
+
+Get-Eventlog -List
+Limit-EventLog -LogName Application -MaximumSize 268435456 -OverflowAction OverwriteOlder -RetentionDays 31;
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\Application" -Name "AutoBackupLogFiles" -Value 1
