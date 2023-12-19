@@ -44,6 +44,7 @@ DECLARE @RetainDays int=7
 DECLARE @SplitThresholdSizeGB bigint=80
 DECLARE @DiffOrLogThresholdSizeGB bigint=0
 DECLARE @BackupFileNamingType nvarchar(50)=''DATE''
+DECLARE @BackupCertificateName sysname=NULL
 DECLARE @PrintOnly bit=0
 
 SELECT @LocalDestinationPath=CAST(value as nvarchar(max)) from [SqlDeep].[sys].[extended_properties] WHERE class=0 and name=N''_BackupLocation''
@@ -57,6 +58,7 @@ EXECUTE [dbo].[dbasp_maintenance_take_backup]
   ,@SplitThresholdSizeGB
   ,@DiffOrLogThresholdSizeGB
   ,@BackupFileNamingType
+  ,@BackupCertificateName
   ,@PrintOnly', 
 		@database_name=N'SqlDeep', 
 		@flags=0

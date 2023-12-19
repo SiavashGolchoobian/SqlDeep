@@ -4,10 +4,11 @@ SET ANSI_NULLS ON
 GO
 
 
+
 -- =============================================
 -- Author:		<Golchoobian>
 -- Create date: <1/25/2015>
--- Version:		<3.0.0.5>
+-- Version:		<3.0.0.6>
 -- Description:	<Backup database>
 -- Input Parameters:
 --	@DatabaseNames:				'<ALL_USER_DATABASES>' or '<ALL_SYSTEM_DATABASES>' or '<ALL_DATABASES>' or 'dbname1,dbname2,...,dbnameN'
@@ -18,6 +19,7 @@ GO
 --	@SplitThresholdSizeGB:		NULL,Negative,0 or any POSITIVE bigint value in GB scale //Take backup on multiple files if estimated DB\Log Backup size is over @SplitThresholdSizeGB also you can use NULL or 0 or any Negative value if you want one backup file in any situation
 --	@DiffOrLogThresholdSizeGB:	NULL,0 or any POSITIVE bigint value in GB scale //Take Diff/Log backup if Data/Log chnaged size from previous backup is greater than or equal to this parameter else ignore backup process
 --	@BackupFileNamingType:		'DATE' or 'DATETIME' or 'JDATE' or 'JDATETIME', if 'DATETIME' is used, this SP will add #Time value to backup file name else only use #Date value for backup file name. JDATE and JDATETIME is same as DAT and DATETIME rule but use Jalali calendar instead of Gregorian calendar
+--	@BackupCertificateName		NULL,Certificate name used to encrypt backup
 --	@PrintOnly:					0 or 1
 -- =============================================
 CREATE PROCEDURE [dbo].[dbasp_maintenance_take_backup]
@@ -29,6 +31,7 @@ CREATE PROCEDURE [dbo].[dbasp_maintenance_take_backup]
 	@SplitThresholdSizeGB BIGINT = 80,
 	@DiffOrLogThresholdSizeGB BIGINT = 0,
 	@BackupFileNamingType nvarchar(50)=N'DATE',
+	@BackupCertificateName sysname=NULL,
 	@PrintOnly BIT=0
 AS
 BEGIN
@@ -105,6 +108,12 @@ BEGIN
 	BEGIN
 		SET @myIsPrerequisitesPassed=0
 		SET @myError_Message=@myError_Message + N'@BackupType is invalid, valid values are N''FULL'',N''LOG'' or N''DIFF''.' + @myNewLine
+	END
+
+	IF @BackupCertificateName IS NOT NULL AND NOT EXISTS (SELECT 1 FROM [master].[sys].[certificates] AS myCert WHERE [myCert].[name] = ISNULL(@BackupCertificateName,'') AND [myCert].[start_date] < getdate() AND [myCert].[expiry_date] > getdate())
+	BEGIN
+		SET @myIsPrerequisitesPassed=0
+		SET @myError_Message=@myError_Message + N'@BackupCertificateName is invalid or certificate is expired.' + @myNewLine
 	END
 
 	IF @myIsPrerequisitesPassed=0
@@ -388,7 +397,8 @@ BEGIN
 							@myNewLine+N'	MEDIANAME = N''' + @myMediaSet_Name + N''','+
 							@myNewLine+N'	MEDIADESCRIPTION = N''' + @myMediaSet_Desc + N''','+
 							@myNewLine+N'	RETAINDAYS = ' + CAST(@RetainDays AS NVARCHAR(MAX)) + N','+
-							@myNewLine+N'	NOFORMAT,NOINIT,NOSKIP,COMPRESSION,CHECKSUM,STATS=10'
+							@myNewLine+N'	NOFORMAT,NOINIT,NOSKIP,COMPRESSION,CHECKSUM,STATS=10'+
+							CASE WHEN @BackupCertificateName IS NOT NULL THEN @myNewLine+N'	,ENCRYPTION (ALGORITHM = AES_256,SERVER CERTIFICATE = '+ CAST(@BackupCertificateName AS NVARCHAR(MAX)) +')' ELSE N'' END
 							AS NVARCHAR(MAX))
 							--, MaxTransferSize=524288 --512KB Read Chunck size for decrese I/O stress
 						BEGIN TRY
@@ -454,7 +464,8 @@ BEGIN
 							@myNewLine+N'	MEDIANAME = N''' + @myMediaSet_Name + N''','+
 							@myNewLine+N'	MEDIADESCRIPTION = N''' + @myMediaSet_Desc + N''','+
 							@myNewLine+N'	RETAINDAYS = ' + CAST(@RetainDays AS NVARCHAR(MAX)) + N','+
-							@myNewLine+N'	NOFORMAT,NOINIT,NOSKIP,COMPRESSION,CHECKSUM,STATS=10'
+							@myNewLine+N'	NOFORMAT,NOINIT,NOSKIP,COMPRESSION,CHECKSUM,STATS=10'+
+							CASE WHEN @BackupCertificateName IS NOT NULL THEN @myNewLine+N'	,ENCRYPTION (ALGORITHM = AES_256,SERVER CERTIFICATE = '+ CAST(@BackupCertificateName AS NVARCHAR(MAX)) +')' ELSE N'' END
 							AS NVARCHAR(MAX))
 							--, MaxTransferSize=524288 --512KB Read Chunck size for decrese I/O stress
 						BEGIN TRY
@@ -520,7 +531,8 @@ BEGIN
 							@myNewLine+N'	MEDIANAME = N''' + @myMediaSet_Name + N''','+
 							@myNewLine+N'	MEDIADESCRIPTION = N''' + @myMediaSet_Desc + N''','+
 							@myNewLine+N'	RETAINDAYS = ' + CAST(@RetainDays AS NVARCHAR(MAX)) + N','+
-							@myNewLine+N'	NOFORMAT,NOINIT,NOSKIP,COMPRESSION,CHECKSUM,STATS=10,DIFFERENTIAL'
+							@myNewLine+N'	NOFORMAT,NOINIT,NOSKIP,COMPRESSION,CHECKSUM,STATS=10,DIFFERENTIAL'+
+							CASE WHEN @BackupCertificateName IS NOT NULL THEN @myNewLine+N'	,ENCRYPTION (ALGORITHM = AES_256,SERVER CERTIFICATE = '+ CAST(@BackupCertificateName AS NVARCHAR(MAX)) +')' ELSE N'' END
 							AS NVARCHAR(MAX))
 							--, MaxTransferSize=524288 --512KB Read Chunck size for decrese I/O stress
 						BEGIN TRY
@@ -590,7 +602,7 @@ EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'dbo',
 GO
 EXEC sp_addextendedproperty N'Created Date', N'2015-01-25', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_take_backup', NULL, NULL
 GO
-EXEC sp_addextendedproperty N'Modified Date', N'2021-03-07', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_take_backup', NULL, NULL
+EXEC sp_addextendedproperty N'Modified Date', N'2022-12-19', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_take_backup', NULL, NULL
 GO
-EXEC sp_addextendedproperty N'Version', N'3.0.0.5', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_take_backup', NULL, NULL
+EXEC sp_addextendedproperty N'Version', N'3.0.0.6', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_take_backup', NULL, NULL
 GO
