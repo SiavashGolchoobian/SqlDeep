@@ -20,8 +20,12 @@ ORDER BY
 --Revoke bad permissions from Public role
 REVOKE EXEC ON OBJECT::master.dbo.xp_instance_regread TO Public;
 REVOKE EXEC ON OBJECT::master.dbo.xp_regread TO Public;
+REVOKE EXEC ON OBJECT::master.dbo.xp_dirtree TO Public;
+REVOKE EXEC ON OBJECT::master.dbo.xp_fileexist TO Public;
+REVOKE EXEC ON OBJECT::master.dbo.xp_fixeddrives TO Public;
+REVOKE EXEC ON OBJECT::master.dbo.xp_getnetname TO Public;
 
---This revokation cause, non sysadmin users can't connect via SSMS, in this case youy need to grant bellow permission to that specific users:
+--This revokation cause, non sysadmin users can't connect via SSMS, in this case you need to grant bellow permission to that specific users:
 USE [master]
 GO
 CREATE ROLE [Role_SSMS]
