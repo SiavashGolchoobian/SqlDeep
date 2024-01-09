@@ -30,6 +30,7 @@ REVOKE EXEC ON OBJECT::master.dbo.xp_sprintf TO Public;
 REVOKE EXEC ON OBJECT::master.dbo.xp_sscanf TO Public;
 REVOKE EXEC ON OBJECT::master.dbo.xp_repl_convert_encrypt_sysadmin_wrapper TO Public;
 REVOKE EXEC ON OBJECT::master.dbo.xp_replposteor TO Public;
+REVOKE VIEW ANY DATABASE TO Public;	--CAUTION !!!
 
 --This revokation cause, non sysadmin users can't connect via SSMS, in this case you need to grant bellow permission to that specific users:
 USE [master]
@@ -42,3 +43,39 @@ CREATE USER [myLogin] FOR LOGIN [myLogin]
 GO
 ALTER ROLE [Role_SSMS] ADD MEMBER [myLogin]
 GO
+
+--This revokation cause, non sysadmin users can't see their databases via SSMS, in this case you need to grant bellow role to that specific users:
+USE [master]
+GO
+CREATE SERVER ROLE [Role_SSMS]
+GO
+GRANT VIEW ANY DATABASE TO [Role_SSMS]
+GO
+ALTER AUTHORIZATION ON SERVER ROLE::[Role_SSMS] TO [sa]
+GO
+
+/*
+--Report List of Users does not have SSMS_ROLE on Server
+--Logins with SSMS_ROLE permission on master Database
+SELECT 
+	myRoles.name AS RoleName,
+	myUsers.name AS UserName
+	--'ALTER SERVER ROLE ['+myRoles.name+'] ADD MEMBER ['+myUsers.name+']' AS AsigneSSMSRoleCommand
+FROM 
+	master.sys.database_principals AS myRoles
+	INNER JOIN master.sys.database_role_members AS myMembers ON myRoles.principal_id=myMembers.role_principal_id
+	INNER JOIN master.sys.database_principals AS myUsers ON myUsers.principal_id=myMembers.member_principal_id
+WHERE
+	myRoles.name IN ('ROLE_SSMS')
+EXCEPT
+--Logins with SSMS_ROLE permission on Server
+SELECT
+	myRoles.name AS RoleName,
+	myUsers.name AS UserName
+FROM
+	master.sys.server_principals AS myRoles
+	INNER JOIN master.sys.server_role_members AS myMembers ON myRoles.principal_id=myMembers.role_principal_id
+	INNER JOIN master.sys.server_principals AS myUsers ON myUsers.principal_id=myMembers.member_principal_id
+WHERE
+	myRoles.name IN ('ROLE_SSMS')
+*/
