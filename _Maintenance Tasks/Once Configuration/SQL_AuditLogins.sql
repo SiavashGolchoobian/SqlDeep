@@ -8,7 +8,11 @@ CREATE SERVER AUDIT SPECIFICATION SqlDeep_TrackAllLogins
 FOR SERVER AUDIT SqlDeep_TrackLogins
 	ADD (FAILED_LOGIN_GROUP),
 	ADD (SUCCESSFUL_LOGIN_GROUP),
-	ADD (AUDIT_CHANGE_GROUP)
+	ADD (AUDIT_CHANGE_GROUP),
+	ADD (DATABASE_PERMISSION_CHANGE_GROUP),
+	ADD (DATABASE_PRINCIPAL_CHANGE_GROUP),
+	ADD (DATABASE_ROLE_MEMBER_CHANGE_GROUP),
+	ADD (SERVER_ROLE_MEMBER_CHANGE_GROUP)
 WITH (STATE = ON);
 GO
 
@@ -58,3 +62,4 @@ Resource:
 	https://support.microsoft.com/en-us/topic/kb4052136-fix-sql-server-audit-events-don-t-write-to-the-security-log-d9708450-6981-2fab-4e58-5f09d561110e
 	https://www.sqlskills.com/blogs/jonathan/resolving-error-33204-sql-server-audit-could-not-write-to-the-security-log/
 	https://learn.microsoft.com/en-us/answers/questions/280882/sql-server-audit-failure-to-security-log
+	https://learn.microsoft.com/en-us/sql/t-sql/statements/create-server-audit-specification-transact-sql?view=sql-server-ver16
