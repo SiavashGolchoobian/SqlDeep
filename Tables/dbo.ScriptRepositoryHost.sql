@@ -1,17 +1,18 @@
 CREATE TABLE [dbo].[ScriptRepositoryHost]
 (
 [RecordId] [bigint] NOT NULL IDENTITY(-9223372036854775807, 1),
-[ScriptText] [nvarchar] (max) COLLATE Arabic_CI_AS NOT NULL,
-[TargetDatabase] [nvarchar] (128) COLLATE Arabic_CI_AS NOT NULL CONSTRAINT [DF_ScriptRepositoryHost_TargetDatabase] DEFAULT (N'master'),
-[ScriptType] [nvarchar] (50) COLLATE Arabic_CI_AS NOT NULL CONSTRAINT [DF__Commands__Comman__1BAEE069] DEFAULT (N'TSQL'),
-[AudienceType] [nvarchar] (50) COLLATE Arabic_CI_AS NOT NULL CONSTRAINT [DF_ScriptRepositoryHost_AudienceType] DEFAULT (N'BRANCH'),
-[Comment] [nvarchar] (max) COLLATE Arabic_CI_AS NULL,
-[Attachment] [varbinary] (max) NULL,
-[CreatedDate] [datetime] NOT NULL CONSTRAINT [DF__Commands__Create__1E8B4D14] DEFAULT (getdate()),
+[FileUniqueName] [nvarchar] (255) COLLATE Arabic_CI_AS NOT NULL,
+[FileType] [nvarchar] (50) COLLATE Arabic_CI_AS NOT NULL CONSTRAINT [DF_ScriptRepositoryHost_ScriptType] DEFAULT (N'TSQL'),
+[FileContent] [varbinary] (max) NOT NULL,
+[AudienceType] [nvarchar] (4000) COLLATE Arabic_CI_AS NOT NULL CONSTRAINT [DF_ScriptRepositoryHost_AudienceType] DEFAULT (N'BRANCH'),
+[AudienceDatabase] [nvarchar] (128) COLLATE Arabic_CI_AS NOT NULL CONSTRAINT [DF_ScriptRepositoryHost_TargetDatabase] DEFAULT (N'master'),
+[CreatedDate] [datetime] NOT NULL CONSTRAINT [DF_ScriptRepositoryHost_CreatedDate] DEFAULT (getdate()),
+[Description] [nvarchar] (4000) COLLATE Arabic_CI_AS NULL,
+[IsEnabled] [bit] NOT NULL CONSTRAINT [DF_ScriptRepositoryHost_IsEnabled] DEFAULT ((0)),
 [RecordRef] [bigint] NULL,
-[CheckValue] AS (binary_checksum([RecordId],[ScriptText],[TargetDatabase],[ScriptType],[AudienceType],[CreatedDate],[RecordRef],[Attachment])) PERSISTED,
+[HostChecksum] AS (binary_checksum([RecordId],[FileUniqueName],[FileType],[FileContent],[AudienceType],[AudienceDatabase],[CreatedDate],[IsEnabled],[RecordRef])) PERSISTED,
 [RowVersion] [timestamp] NOT NULL
-) ON [Data_OLTP]
+) ON [PRIMARY]
 GO
 SET QUOTED_IDENTIFIER ON
 GO
@@ -34,7 +35,11 @@ BEGIN
 	ROLLBACK
 END
 GO
-ALTER TABLE [dbo].[ScriptRepositoryHost] ADD CONSTRAINT [PK__Commands__FBDF78E9250567FC] PRIMARY KEY CLUSTERED  ([RecordId]) WITH (FILLFACTOR=85) ON [Data_OLTP]
+ALTER TABLE [dbo].[ScriptRepositoryHost] ADD CONSTRAINT [CHK_dbo_ScriptRepositoryHost_FileType] CHECK (([FileType]='OTHER' OR [FileType]='POWERSHELL' OR [FileType]='TSQL' OR [FileType]='CMD'))
+GO
+ALTER TABLE [dbo].[ScriptRepositoryHost] ADD CONSTRAINT [PK_dbo_ScriptRepositoryHost] PRIMARY KEY CLUSTERED ([RecordId]) WITH (FILLFACTOR=85) ON [PRIMARY]
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [UNQ_FileUniqueName] ON [dbo].[ScriptRepositoryHost] ([FileUniqueName]) WITH (FILLFACTOR=85) ON [PRIMARY]
 GO
 SET NUMERIC_ROUNDABORT OFF
 GO
@@ -50,9 +55,11 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-CREATE UNIQUE NONCLUSTERED INDEX [UNQ_ReferencceChain] ON [dbo].[ScriptRepositoryHost] ([RecordRef]) WHERE ([RecordRef] IS NOT NULL) WITH (FILLFACTOR=85) ON [Index_All]
+CREATE UNIQUE NONCLUSTERED INDEX [UNQ_ReferencceChain] ON [dbo].[ScriptRepositoryHost] ([RecordRef]) WHERE ([RecordRef] IS NOT NULL) WITH (FILLFACTOR=85) ON [PRIMARY]
 GO
 ALTER TABLE [dbo].[ScriptRepositoryHost] ADD CONSTRAINT [FK_ScriptRepositoryHost_ScriptRepositoryHost] FOREIGN KEY ([RecordRef]) REFERENCES [dbo].[ScriptRepositoryHost] ([RecordId])
+GO
+GRANT SELECT ON  [dbo].[ScriptRepositoryHost] TO [role_sqldeep_repo]
 GO
 EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'dbo', 'TABLE', N'ScriptRepositoryHost', NULL, NULL
 GO

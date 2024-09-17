@@ -4,7 +4,6 @@ SET ANSI_NULLS ON
 GO
 
 
-
 -- =============================================
 -- Author:		<Golchoobian>
 -- Create date: <01/07/2024>
@@ -111,6 +110,7 @@ BEGIN
 			(
 			SELECT
 				[myXefile].[LogDateTime],
+				--[xed].[event_data].[value]('@timestamp','datetimeoffset(7)') AS [EventTimeStamp],
 				[xed].[event_data].[value]('(data[@name="error_number"]/value)[1]', 'nvarchar(50)') AS [ErrorNumber],
 				[xed].[event_data].[value]('(data[@name="message"]/value)[1]', 'nvarchar(255)') AS [Message],
 				[xed].[event_data].[value]('(action[@name="database_name"]/value)[1]', 'nvarchar(255)') AS [DatabaseName],
@@ -143,6 +143,7 @@ BEGIN
 		--					   )
 		--	   )																			AS [datetime_local]
 		[myXefile].[LogDateTime],
+		--[xed].[event_data].[value]('@timestamp','datetimeoffset(7)') AS [EventTimeStamp],
 		[xed].[event_data].[value]('(data[@name="error_number"]/value)[1]', 'nvarchar(50)') AS [ErrorNumber],
 		[xed].[event_data].[value]('(data[@name="category"]/text)[1]', 'nvarchar(50)') AS [Serverity],
 		[xed].[event_data].[value]('(data[@name="message"]/value)[1]', 'nvarchar(255)') AS [Message],

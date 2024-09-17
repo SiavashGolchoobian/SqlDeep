@@ -2,6 +2,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
+
 CREATE PROCEDURE [dbo].[dbasp_drop_db_user] (
     @DbName                         VARCHAR(256),
     @UserName                       VARCHAR(256),
@@ -299,7 +300,29 @@ BEGIN
         RAISERROR('And also removing object role memberships for database user [%s]',0,1,@NewObjectOwner,@UserName);
         SELECT * FROM #OwnedDbObject;
     END;
+ 
+    if(@Debug = 1)
+    BEGIN
+        RAISERROR('Collecting services owned by database user',0,1);
+    END;    
     
+    SET @tsql = 'USE [' + @DbName + ']; ' + @LineFeed +
+                'INSERT INTO #OwnedDbObject' + @LineFeed +
+                'select' + @LineFeed +
+                '    name, ' + @LineFeed +
+                '    ''SERVICE'' ' + @LineFeed +
+                'from sys.services ' + @LineFeed +
+                'where principal_id = USER_ID(@UserName);' + @LineFeed 
+                ;
+    
+    IF(@Debug = 1)
+    BEGIN
+		SET @message='/* Next Query to run:' + @LineFeed + @tsql + @LineFeed + '*/'
+        RAISERROR(@message,0,1);
+    END;
+    
+    exec sp_executesql @tsql, N'@UserName VARCHAR(256)', @UserName = @UserName;
+
     -- ensure we go into the loop
     SET @CanExitLoop = 0;
     

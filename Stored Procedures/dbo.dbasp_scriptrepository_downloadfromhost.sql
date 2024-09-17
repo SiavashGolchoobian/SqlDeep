@@ -16,11 +16,11 @@ GO
 --	@AudienceType:		BRANCH,WAREHOUSE,X,Y This is a comma seperated filter for repository to retrive related records according to filter(s)
 --	@IgnoreRowVersion:	If true, skip rowversion base change detection
 -- =============================================
-CREATE PROCEDURE [dbo].[dbasp_scriptrepository_downloadfromhost] (@LinkedServerName NVARCHAR(128), @AudienceType NVARCHAR(50)=N'BRANCH', @IgnoreRowVersion BIT = 0) AS
+CREATE PROCEDURE [dbo].[dbasp_scriptrepository_downloadfromhost] (@LinkedServerName NVARCHAR(128), @AudienceType NVARCHAR(50)=N'TSX', @IgnoreRowVersion BIT = 0) AS
 BEGIN
 	SET NOCOUNT ON
 	SET @LinkedServerName = REPLACE(REPLACE(@LinkedServerName,N'[',N''),N']',N'')
-	IF EXISTS(SELECT 1 FROM sys.[servers] WHERE name=@LinkedServerName)
+	IF EXISTS(SELECT 1 FROM [sys].[servers] WHERE name=@LinkedServerName)
 	BEGIN
 		DECLARE @myLastChange AS BINARY(8)
 		DECLARE @myLastRecord AS BIGINT
@@ -34,10 +34,10 @@ BEGIN
 		INSERT INTO @myAudienceTable([Position],[Parameter]) SELECT [myList].[Position], [myList].[Parameter] FROM [dbo].[dbafn_split](',',@AudienceType) AS myList WHERE LEN([myList].[Parameter])>0
 		SELECT @myAudienceList=@myAudienceList + N',''''' + [myList].[Parameter] + N'''''' FROM @myAudienceTable AS myList
 		SET @myAudienceList = CASE WHEN LEN(@myAudienceList)>0 THEN RIGHT(@myAudienceList,LEN(@myAudienceList)-1) ELSE NULL END
-		SET @myLastRecord=ISNULL((SELECT MAX([ScriptRepositoryGuest].[RecordId]) FROM [dbo].[ScriptRepositoryGuest]),@myBigIntMinVal)
+		SET @myLastRecord=ISNULL((SELECT MAX([RecordId]) FROM [dbo].[ScriptRepositoryGuest]),@myBigIntMinVal)
 		SET @myLastChange=ISNULL((SELECT MAX([RowVersion]) FROM [dbo].[ScriptRepositoryGuest]),0)
 
-		SET @myInnerCommand = N'INSERT INTO [SqlDeep].[dbo].[ScriptRepositoryGuest](RecordId,ScriptText,TargetDatabase,ScriptType,AudienceType,Attachment,CreatedDate,RecordRef,CheckValue,RowVersion) SELECT RecordId,ScriptText,TargetDatabase,ScriptType,AudienceType,Attachment,CreatedDate,RecordRef,CheckValue,RowVersion FROM OPENQUERY([' + @LinkedServerName + '],''Select RecordId,ScriptText,TargetDatabase,ScriptType,AudienceType,Attachment,CreatedDate,RecordRef,CheckValue,RowVersion FROM [SqlDeep].[dbo].[ScriptRepositoryHost] WHERE '+ 
+		SET @myInnerCommand = N'INSERT INTO [SqlDeep].[dbo].[ScriptRepositoryGuest](RecordId,FileUniqueName,FileType,FileContent,AudienceDatabase,AudienceType,CreatedDate,IsEnabled,RecordRef,HostChecksum,RowVersion) SELECT RecordId,FileUniqueName,FileType,FileContent,AudienceDatabase,AudienceType,CreatedDate,IsEnabled,RecordRef,HostChecksum,RowVersion FROM OPENQUERY([' + @LinkedServerName + '],''Select RecordId,FileUniqueName,FileType,FileContent,AudienceDatabase,AudienceType,CreatedDate,IsEnabled,RecordRef,HostChecksum,RowVersion FROM [SqlDeep].[dbo].[ScriptRepositoryHost] WHERE '+ 
 								CASE @IgnoreRowVersion WHEN 0 THEN 'CONVERT(BIGINT,RowVersion) > ' + CAST(CONVERT(BIGINT, @myLastChange) AS NVARCHAR(MAX)) + N' AND ' ELSE N'' END +
 								N'RecordId > ' + CAST(@myLastRecord AS NVARCHAR(MAX)) + N' AND AudienceType IN (' + @myAudienceList +')'')'
 		PRINT @myInnerCommand

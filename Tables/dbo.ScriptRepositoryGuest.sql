@@ -1,18 +1,18 @@
 CREATE TABLE [dbo].[ScriptRepositoryGuest]
 (
 [RecordId] [bigint] NOT NULL,
-[ScriptText] [nvarchar] (max) COLLATE Arabic_CI_AS NOT NULL,
-[TargetDatabase] [nvarchar] (128) COLLATE Arabic_CI_AS NOT NULL,
-[ScriptType] [nvarchar] (50) COLLATE Arabic_CI_AS NOT NULL,
-[AudienceType] [nvarchar] (50) COLLATE Arabic_CI_AS NOT NULL CONSTRAINT [DF_ScriptRepositoryGuest_AudienceType] DEFAULT (N'BRANCH'),
-[Attachment] [varbinary] (max) NULL,
+[FileUniqueName] [nvarchar] (255) COLLATE Arabic_CI_AS NOT NULL,
+[FileType] [nvarchar] (50) COLLATE Arabic_CI_AS NOT NULL,
+[FileContent] [varbinary] (max) NOT NULL,
+[AudienceType] [nvarchar] (4000) COLLATE Arabic_CI_AS NOT NULL CONSTRAINT [DF_ScriptRepositoryGuest_AudienceType] DEFAULT (N'BRANCH'),
+[AudienceDatabase] [nvarchar] (128) COLLATE Arabic_CI_AS NOT NULL,
 [CreatedDate] [datetime] NOT NULL,
-[RecordRef] [bigint] NULL,
-[CheckValue] [int] NOT NULL,
-[RowVersion] [binary] (8) NOT NULL,
-[CalculatedCheckValue] AS (binary_checksum([RecordId],[ScriptText],[TargetDatabase],[ScriptType],[AudienceType],[CreatedDate],[RecordRef],[Attachment])) PERSISTED,
-[DownloadDate] [datetime] NOT NULL CONSTRAINT [DF__ScriptRep__Downl__329245C1] DEFAULT (getdate()),
 [IsEnabled] [bit] NOT NULL CONSTRAINT [DF_ScriptRepositoryGuest_IsEnabled] DEFAULT ((1)),
+[RecordRef] [bigint] NULL,
+[HostChecksum] [int] NOT NULL,
+[RowVersion] [binary] (8) NOT NULL,
+[GuestChecksum] AS (binary_checksum([RecordId],[FileUniqueName],[FileType],[FileContent],[AudienceType],[AudienceDatabase],[CreatedDate],[IsEnabled],[RecordRef])) PERSISTED,
+[DownloadDate] [datetime] NOT NULL CONSTRAINT [DF_ScriptRepositoryGuest_DownloadDate] DEFAULT (getdate()),
 [LastExecutionDate] [datetime] NULL,
 [LastExecutionStatus] [nvarchar] (50) COLLATE Arabic_CI_AS NULL,
 [ExecutionLog] [nvarchar] (max) COLLATE Arabic_CI_AS NULL
@@ -22,11 +22,6 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
--- =============================================
--- Author:		<Author,,Name>
--- Create date: <Create Date,,>
--- Description:	<Description,,>
--- =============================================
 CREATE TRIGGER [dbo].[ScriptRepositoryGuest_U]
    ON  [dbo].[ScriptRepositoryGuest]
    AFTER UPDATE
@@ -35,14 +30,18 @@ BEGIN
 	IF (@@ROWCOUNT=0)
 		RETURN;
 
-	IF UPDATE([RecordId]) OR UPDATE([ScriptText]) OR UPDATE([TargetDatabase]) OR UPDATE([ScriptType]) OR UPDATE([AudienceType]) OR UPDATE([Attachment]) OR UPDATE([CreatedDate]) OR UPDATE([RecordRef]) OR UPDATE([CheckValue]) OR UPDATE([RowVersion]) OR UPDATE([DownloadDate])
+	IF UPDATE([RecordId]) OR UPDATE([FileUniqueName]) OR UPDATE([FileType]) OR UPDATE([FileContent]) OR UPDATE([AudienceDatabase]) OR UPDATE([AudienceType]) OR UPDATE([CreatedDate]) OR UPDATE([IsEnabled]) OR UPDATE([RecordRef]) OR UPDATE([HostChecksum]) OR UPDATE([RowVersion]) OR UPDATE([DownloadDate])
 	BEGIN
 		PRINT ('Updating for some field(s) is not permitted.')
 		ROLLBACK
 	END
 END
 GO
-ALTER TABLE [dbo].[ScriptRepositoryGuest] ADD CONSTRAINT [PK__ScriptRe__FBDF78E9963EEBBD] PRIMARY KEY CLUSTERED  ([RecordId]) WITH (FILLFACTOR=85) ON [PRIMARY]
+ALTER TABLE [dbo].[ScriptRepositoryGuest] ADD CONSTRAINT [CHK_dbo_ScriptRepositoryGuest_FileType] CHECK (([FileType]='OTHER' OR [FileType]='POWERSHELL' OR [FileType]='TSQL' OR [FileType]='CMD'))
+GO
+ALTER TABLE [dbo].[ScriptRepositoryGuest] ADD CONSTRAINT [PK_dbo_ScriptRepositoryGuest] PRIMARY KEY CLUSTERED ([RecordId]) WITH (FILLFACTOR=85) ON [PRIMARY]
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [UNQ_dbo_ScriptRepositoryGuest_FileUniqueName] ON [dbo].[ScriptRepositoryGuest] ([FileUniqueName]) WITH (FILLFACTOR=85) ON [PRIMARY]
 GO
 SET NUMERIC_ROUNDABORT OFF
 GO
@@ -58,7 +57,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-CREATE UNIQUE NONCLUSTERED INDEX [UNQ_ReferencceChain] ON [dbo].[ScriptRepositoryGuest] ([RecordRef]) WHERE ([RecordRef] IS NOT NULL) WITH (FILLFACTOR=85) ON [PRIMARY]
+CREATE UNIQUE NONCLUSTERED INDEX [UNQ_dbo_ScriptRepositoryGuest_ReferencceChain] ON [dbo].[ScriptRepositoryGuest] ([RecordRef]) WHERE ([RecordRef] IS NOT NULL) WITH (FILLFACTOR=85) ON [PRIMARY]
 GO
 EXEC sp_addextendedproperty N'ATTENTION', N'این جدول در سرور مرکزی مورد نیاز نمیباشد، این جدول را باید در دیتابیس DBA در سرورهای شعب ایجاد کنید', 'SCHEMA', N'dbo', 'TABLE', N'ScriptRepositoryGuest', NULL, NULL
 GO

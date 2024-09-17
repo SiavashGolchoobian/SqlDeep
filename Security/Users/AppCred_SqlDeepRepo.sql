@@ -1,0 +1,2 @@
+CREATE USER [AppCred_SqlDeepRepo] WITHOUT LOGIN
+GO

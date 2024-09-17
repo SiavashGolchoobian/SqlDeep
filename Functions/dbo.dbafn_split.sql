@@ -34,6 +34,9 @@ RETURN
     FROM Pieces
 )
 
+
+GO
+GRANT SELECT ON  [dbo].[dbafn_split] TO [role_sqldeep_repo]
 GO
 EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'dbo', 'FUNCTION', N'dbafn_split', NULL, NULL
 GO

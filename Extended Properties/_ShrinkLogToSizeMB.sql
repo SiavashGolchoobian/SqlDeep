@@ -1,2 +1,2 @@
-EXEC sp_addextendedproperty N'_ShrinkLogToSizeMB', N'200', NULL, NULL, NULL, NULL, NULL, NULL
+EXEC sp_addextendedproperty N'_ShrinkLogToSizeMB', N'256', NULL, NULL, NULL, NULL, NULL, NULL
 GO
