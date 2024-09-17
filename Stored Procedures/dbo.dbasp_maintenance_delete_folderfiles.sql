@@ -27,7 +27,9 @@ BEGIN
 	DECLARE @myDirTree TABLE (rowno int identity,folder nvarchar(255),depth int, parentrow int)
 	DECLARE @myFolders TABLE (folder nvarchar(255))
 	DECLARE @myFileType INT
+	DECLARE @myOsPathSeperator CHAR(1);
 
+	SET @myOsPathSeperator = CASE WHEN CHARINDEX('Linux',@@VERSION,1)<>0 THEN N'/' ELSE N'\' END
 	SET @ReturnValue= cast(0 as bit)	--0 is OK and 1 is Error
 	SET @myCursor_Roots=CURSOR For
 		Select [myList].[Parameter] AS [Path] FROM [dbo].[dbafn_split](N',',@FolderPath) AS myList 
@@ -36,14 +38,14 @@ BEGIN
 	FETCH NEXT FROM @myCursor_Roots INTO @myCurrentRoot
 		WHILE @@FETCH_STATUS=0
 		BEGIN
-			IF RIGHT (@myCurrentRoot,1)!='\'
-				SET @myCurrentRoot=@myCurrentRoot + N'\'
+			IF RIGHT (@myCurrentRoot,1)!=@myOsPathSeperator
+				SET @myCurrentRoot=@myCurrentRoot + @myOsPathSeperator
 
 			DELETE FROM @myDirTree
 			DELETE FROM @myFolders
 			INSERT INTO @myDirTree (folder,depth) exec xp_dirtree @myCurrentRoot
 			UPDATE @myDirTree SET 
-				folder = folder + N'\',
+				folder = folder + @myOsPathSeperator,
 				parentrow = (select top 1 rowno from @myDirTree as mySecond where mySecond.depth=myFirst.depth-1 and mySecond.rowno<myFirst.rowno order by rowno desc)
 			FROM
 				@myDirTree as myFirst

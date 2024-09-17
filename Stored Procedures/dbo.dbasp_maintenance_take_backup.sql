@@ -8,7 +8,7 @@ GO
 -- =============================================
 -- Author:		<Golchoobian>
 -- Create date: <1/25/2015>
--- Version:		<3.0.0.6>
+-- Version:		<3.0.0.7>
 -- Description:	<Backup database>
 -- Input Parameters:
 --	@DatabaseNames:				'<ALL_USER_DATABASES>' or '<ALL_SYSTEM_DATABASES>' or '<ALL_DATABASES>' or 'dbname1,dbname2,...,dbnameN'
@@ -37,6 +37,7 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 	--=====Internal Parameters
+	DECLARE @myOsPathSeperator CHAR(1);
 	DECLARE @myIsPrerequisitesPassed BIT;
 	DECLARE @myIsCompressionEnabled BIT;
 	DECLARE @myNormalCompressionRate DECIMAL(10,3);
@@ -91,6 +92,7 @@ BEGIN
 	SET @myNormalCompressionRate=2.499;
 	SET @myIsCompressionEnabled = ISNULL((SELECT CAST([myConfig].[value] AS BIT) FROM [sys].[configurations] AS myConfig  WHERE [myConfig].[name] = N'backup compression default'),0)	--Determin Default behaviour of Backup Compression
 	SET @BackupFileNamingType=UPPER(@BackupFileNamingType);
+	SET @myOsPathSeperator = CASE WHEN CHARINDEX('Linux',@@VERSION,1)<>0 THEN N'/' ELSE N'\' END
 	--=====Prerequisites Control
 	IF NOT EXISTS (SELECT 1 FROM [dbo].[dbafn_split](N',',@LocalDestinationPath) AS myList WHERE [myList].[Parameter] IS NOT NULL AND LEN(RTRIM(LTRIM([myList].[Parameter])))>0)
 	BEGIN
@@ -139,7 +141,7 @@ BEGIN
 									WHEN @BackupFileNamingType IN (N'JDATE','JDATETIME') THEN [dbo].[dbafn_miladi2shamsi] (@myGregorian_Date,N'_')		--Calculate current persian or gregorian date
 									ELSE CAST(DATEPART(YEAR,@myGregorian_Date) AS NVARCHAR(10)) + N'_' + CASE WHEN DATEPART(MONTH,@myGregorian_Date)<10 THEN N'0' ELSE N'' END + CAST(DATEPART(MONTH,@myGregorian_Date) AS NVARCHAR(10)) + N'_' +  CASE WHEN DATEPART(DAY,@myGregorian_Date)<10 THEN N'0' ELSE N'' END  + CAST(DATEPART(DAY,@myGregorian_Date) AS NVARCHAR(10))		--Calculate current persian or gregorian date
 								  END;
-			SET @myFolderDate = Left(@myCalendar_Date,7) + N'\' + Right(@myCalendar_Date,2);									--Calculate required sub directories under @Backup_Base structure for storing backup files			
+			SET @myFolderDate = Left(@myCalendar_Date,7) + @myOsPathSeperator + Right(@myCalendar_Date,2);									--Calculate required sub directories under @Backup_Base structure for storing backup files			
 			SET @myEstimatedBackupSize = NULL;
 			SET @myEstimatedCompressedBackupSize = NULL;
 			SET @myEstimatedCompressionRate = @myNormalCompressionRate;
@@ -154,7 +156,7 @@ BEGIN
 				CREATE TABLE #myDestinationTable (ID INT IDENTITY,[Path] NVARCHAR(255))
 				INSERT INTO [#myDestinationTable]([Path])
 				SELECT 
-					[myList].[Parameter]+N'\'+ @myFolderDate AS [Path]
+					[myList].[Parameter]+@myOsPathSeperator+ @myFolderDate AS [Path]
 				FROM 
 					[dbo].[dbafn_split](N',',@LocalDestinationPath) AS myList 
 				WHERE 
@@ -270,7 +272,7 @@ BEGIN
 					IF @myIterator02=@myIterator01
 						EXECUTE [dbo].dbasp_make_directory @myNewFolder;
 										--Calculate full path of backupfile location (in local disk)
-					SET @myBackupDisks=@myBackupDisks + CAST(N'DISK=N''' + @myNewFolder + N'\' + UPPER(@BackupType) +N'_'+ @myDatabase_Name + N'_' + @myCalendar_Date + (CASE WHEN @BackupFileNamingType IN (N'DATETIME',N'JDATETIME') THEN '_on_'+ @myTimeChar ELSE N'' END) + N'_' + CAST(@myIterator01 AS NVARCHAR(MAX)) + N'of' + CAST(CAST(@myDatabase_BackupFileCount AS BIGINT) AS NVARCHAR(MAX)) + N'.' + @BackupExtension + N''','  AS NVARCHAR(MAX))
+					SET @myBackupDisks=@myBackupDisks + CAST(N'DISK=N''' + @myNewFolder + @myOsPathSeperator + UPPER(@BackupType) +N'_'+ @myDatabase_Name + N'_' + @myCalendar_Date + (CASE WHEN @BackupFileNamingType IN (N'DATETIME',N'JDATETIME') THEN '_on_'+ @myTimeChar ELSE N'' END) + N'_' + CAST(@myIterator01 AS NVARCHAR(MAX)) + N'of' + CAST(CAST(@myDatabase_BackupFileCount AS BIGINT) AS NVARCHAR(MAX)) + N'.' + @BackupExtension + N''','  AS NVARCHAR(MAX))
 					SET @myIterator01=@myIterator01+1
 					SET @myIterator02=@myIterator02+1
 					SET @myIterator02=CASE WHEN @myIterator02>@myDatabase_BackupDestinationCount THEN 1 ELSE @myIterator02 END

@@ -2,9 +2,6 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-
-
-
 -- =============================================
 -- Author:		<Golchoobian>
 -- Create date: <1/21/2015>
@@ -24,11 +21,13 @@ CREATE PROCEDURE [dbo].[dbasp_create_snapshot]
 AS
 BEGIN
 	SET NOCOUNT ON;
+	DECLARE @myOsPathSeperator CHAR(1);
 	DECLARE @Database_Name nvarchar(255);
 	DECLARE @SnapshotArray dbo.ConcatTableType_v03;
 	DECLARE @SqlCmd nvarchar(MAX);
 	DECLARE @myCursor Cursor;
 	
+	SET @myOsPathSeperator = CASE WHEN CHARINDEX('Linux',@@VERSION,1)<>0 THEN N'/' ELSE N'\' END
 	SET @myCursor=CURSOR For
 		Select [Name] FROM [dbo].[dbafn_database_list](@DatabaseNames,1,1,1,0,0)
 		
@@ -41,7 +40,7 @@ BEGIN
 				INSERT INTO @SnapshotArray
 				SELECT 
 					'(NAME = ''' + myDbFiles.name + 
-					''', FileName=''' + @SnapshotFolderLocation + '\'+ @SnapshotNameSuffix +'_' + myDbFiles.[name] + '_' + CAST(myDbFiles.file_id as nvarchar) + '_' + CAST(NEWID() AS NVARCHAR(50)) + '.snp'')' 
+					''', FileName=''' + @SnapshotFolderLocation + @myOsPathSeperator + @SnapshotNameSuffix +'_' + myDbFiles.[name] + '_' + CAST(myDbFiles.file_id as nvarchar) + '_' + CAST(NEWID() AS NVARCHAR(50)) + '.snp'')' 
 				FROM 
 					sys.master_files as myDbFiles 
 				WHERE 
