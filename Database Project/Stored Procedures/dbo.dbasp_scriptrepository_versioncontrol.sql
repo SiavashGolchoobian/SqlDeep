@@ -7,7 +7,7 @@ GO
 -- Author:		<Golchoobian>
 -- Create date: <06/04/2019>
 -- Version:		<3.0.0.0>
--- Description:	<Detect inconsustency and prepare repository for resync>
+-- Description:	<Detect inconsistency and prepare repository for resync>
 -- Implementation Note:	You should deploy "dbasp_scriptrepository_downloadfromhost" , "dbasp_scriptrepository_versioncontrol" and "dbasp_scriptrepository_executeonguest" sp's in the guest machine(s) and also you should create "ScriptRepositoryGuest" table on that guest machine(s) too.
 --						IN Host machine you need to have only "ScriptRepositoryHost" table and insert your script's in this table as a central repository.
 --						After these settings, in guest machine(s) you should create a LinkedServer to HostMachine and create then a job on guest machine(s) to run "dbasp_scriptrepository_downloadfromhost" sp at the first step, then "dbasp_scriptrepository_versioncontrol" at the second step and "dbasp_scriptrepository_executeonguest" sp at the last step, also that job should be fail and stop if each step is failed and does not go to next step
