@@ -41,7 +41,7 @@ ALTER TABLE [dbo].[ScriptRepositoryGuest] ADD CONSTRAINT [CHK_dbo_ScriptReposito
 GO
 ALTER TABLE [dbo].[ScriptRepositoryGuest] ADD CONSTRAINT [PK_dbo_ScriptRepositoryGuest] PRIMARY KEY CLUSTERED ([RecordId]) WITH (FILLFACTOR=85) ON [PRIMARY]
 GO
-CREATE UNIQUE NONCLUSTERED INDEX [UNQ_dbo_ScriptRepositoryGuest_FileUniqueName] ON [dbo].[ScriptRepositoryGuest] ([FileUniqueName]) WITH (FILLFACTOR=85) ON [PRIMARY]
+CREATE UNIQUE NONCLUSTERED INDEX [UNQ_dbo_ScriptRepositoryGuest_FileUniqueName] ON [dbo].[ScriptRepositoryGuest] ([FileUniqueName]) WITH (FILLFACTOR=85, PAD_INDEX=ON) ON [Index_All]
 GO
 SET NUMERIC_ROUNDABORT OFF
 GO

@@ -12,7 +12,7 @@ CREATE TABLE [dbo].[ScriptRepositoryHost]
 [RecordRef] [bigint] NULL,
 [HostChecksum] AS (binary_checksum([RecordId],[FileUniqueName],[FileType],[FileContent],[AudienceType],[AudienceDatabase],[CreatedDate],[IsEnabled],[RecordRef])) PERSISTED,
 [RowVersion] [timestamp] NOT NULL
-) ON [PRIMARY]
+) ON [Data_OLTP]
 GO
 SET QUOTED_IDENTIFIER ON
 GO
@@ -37,9 +37,9 @@ END
 GO
 ALTER TABLE [dbo].[ScriptRepositoryHost] ADD CONSTRAINT [CHK_dbo_ScriptRepositoryHost_FileType] CHECK (([FileType]='OTHER' OR [FileType]='POWERSHELL' OR [FileType]='TSQL' OR [FileType]='CMD'))
 GO
-ALTER TABLE [dbo].[ScriptRepositoryHost] ADD CONSTRAINT [PK_dbo_ScriptRepositoryHost] PRIMARY KEY CLUSTERED ([RecordId]) WITH (FILLFACTOR=85) ON [PRIMARY]
+ALTER TABLE [dbo].[ScriptRepositoryHost] ADD CONSTRAINT [PK_dbo_ScriptRepositoryHost] PRIMARY KEY CLUSTERED ([RecordId]) WITH (FILLFACTOR=85) ON [Data_OLTP]
 GO
-CREATE UNIQUE NONCLUSTERED INDEX [UNQ_FileUniqueName] ON [dbo].[ScriptRepositoryHost] ([FileUniqueName]) WITH (FILLFACTOR=85) ON [PRIMARY]
+CREATE UNIQUE NONCLUSTERED INDEX [UNQ_FileUniqueName] ON [dbo].[ScriptRepositoryHost] ([FileUniqueName]) WITH (FILLFACTOR=85, PAD_INDEX=ON) ON [Index_All]
 GO
 SET NUMERIC_ROUNDABORT OFF
 GO
@@ -55,7 +55,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-CREATE UNIQUE NONCLUSTERED INDEX [UNQ_ReferencceChain] ON [dbo].[ScriptRepositoryHost] ([RecordRef]) WHERE ([RecordRef] IS NOT NULL) WITH (FILLFACTOR=85) ON [PRIMARY]
+CREATE UNIQUE NONCLUSTERED INDEX [UNQ_ReferencceChain] ON [dbo].[ScriptRepositoryHost] ([RecordRef]) WHERE ([RecordRef] IS NOT NULL) WITH (FILLFACTOR=85) ON [Index_All]
 GO
 ALTER TABLE [dbo].[ScriptRepositoryHost] ADD CONSTRAINT [FK_ScriptRepositoryHost_ScriptRepositoryHost] FOREIGN KEY ([RecordRef]) REFERENCES [dbo].[ScriptRepositoryHost] ([RecordId])
 GO

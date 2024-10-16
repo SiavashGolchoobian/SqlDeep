@@ -13,7 +13,7 @@ CREATE TABLE [repository].[Publisher]
 [Metadata] [xml] NULL,
 [ItemChecksum] AS (binary_checksum([ItemId],[ItemName],[ItemType],[ItemContent],[Metadata])) PERSISTED,
 [RowVersion] [timestamp] NOT NULL
-) ON [PRIMARY]
+) ON [Data_OLTP]
 GO
 SET QUOTED_IDENTIFIER ON
 GO
@@ -51,9 +51,9 @@ END
 GO
 ALTER TABLE [repository].[Publisher] ADD CONSTRAINT [CHK_Repository_Publisher_ItemType] CHECK (([ItemType]='CMD' OR [ItemType]='TSQL' OR [ItemType]='POWERSHELL' OR [ItemType]='OTHER'))
 GO
-CREATE UNIQUE CLUSTERED INDEX [PK_Repository_Publisher] ON [repository].[Publisher] ([ItemId]) WITH (FILLFACTOR=85) ON [PRIMARY]
+CREATE UNIQUE CLUSTERED INDEX [PK_Repository_Publisher] ON [repository].[Publisher] ([ItemId]) ON [Data_OLTP]
 GO
-CREATE UNIQUE NONCLUSTERED INDEX [UNQ_Repository_Publisher] ON [repository].[Publisher] ([ItemName], [ItemVersion]) WITH (FILLFACTOR=85) ON [PRIMARY]
+CREATE UNIQUE NONCLUSTERED INDEX [UNQ_Repository_Publisher] ON [repository].[Publisher] ([ItemName], [ItemVersion]) ON [Data_OLTP]
 GO
 GRANT SELECT ON  [repository].[Publisher] TO [role_sqldeep_repo]
 GO
