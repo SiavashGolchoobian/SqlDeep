@@ -79,7 +79,7 @@
     <DataFile>maintenance.Variables_Data.sql</DataFile>
     <DataFile>maintenance._CatalogOfFields_Data.sql</DataFile>
     <DataFile>maintenance._CatalogOfTables_Data.sql</DataFile>
-    <DataFile>repository.Subscriber_Data.sql</DataFile>
     <DataFile>repository.Publisher_Data.sql</DataFile>
+    <DataFile>repository.Subscriber_Data.sql</DataFile>
   </DataFileSet>
 </DatabaseInformation>
