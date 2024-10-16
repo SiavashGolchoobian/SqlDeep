@@ -51,7 +51,7 @@ END
 GO
 ALTER TABLE [repository].[Publisher] ADD CONSTRAINT [CHK_Repository_Publisher_ItemType] CHECK (([ItemType]='CMD' OR [ItemType]='TSQL' OR [ItemType]='POWERSHELL' OR [ItemType]='OTHER'))
 GO
-CREATE UNIQUE CLUSTERED INDEX [PK_Repository_Publisher] ON [repository].[Publisher] ([ItemId]) WITH (FILLFACTOR=85) ON [Data_OLTP]
+ALTER TABLE [repository].[Publisher] ADD CONSTRAINT [PK_Repository_Publisher] PRIMARY KEY CLUSTERED ([ItemId]) WITH (FILLFACTOR=85, PAD_INDEX=ON) ON [Data_OLTP]
 GO
 CREATE UNIQUE NONCLUSTERED INDEX [UNQ_Repository_Publisher] ON [repository].[Publisher] ([ItemName], [ItemVersion]) WITH (FILLFACTOR=85) ON [Data_OLTP]
 GO

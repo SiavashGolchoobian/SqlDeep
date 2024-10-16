@@ -22,9 +22,9 @@ CREATE TABLE [repository].[Subscriber]
 GO
 ALTER TABLE [repository].[Subscriber] ADD CONSTRAINT [CHK_Repository_Subscriber_SubscriberExecutionResult] CHECK (([SubscriberExecutionResult]='FAILED' OR [SubscriberExecutionResult]='SUCCEEDED' OR [SubscriberExecutionResult]=N'NOT EXECUTED'))
 GO
-CREATE UNIQUE NONCLUSTERED INDEX [UNQ_Repository_Subscriber] ON [repository].[Subscriber] ([PublisherName], [ItemName], [ItemVersion]) WITH (FILLFACTOR=85) ON [Data_OLTP]
+ALTER TABLE [repository].[Subscriber] ADD CONSTRAINT [PK_Repository_Subscriber] PRIMARY KEY CLUSTERED ([SubscriberItemId]) WITH (FILLFACTOR=85, PAD_INDEX=ON) ON [Data_OLTP]
 GO
-CREATE UNIQUE CLUSTERED INDEX [PK_Repository_Subscriber] ON [repository].[Subscriber] ([SubscriberItemId]) WITH (FILLFACTOR=85) ON [Data_OLTP]
+CREATE UNIQUE NONCLUSTERED INDEX [UNQ_Repository_Subscriber] ON [repository].[Subscriber] ([PublisherName], [ItemName], [ItemVersion]) WITH (FILLFACTOR=85) ON [Data_OLTP]
 GO
 EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'repository', 'TABLE', N'Subscriber', NULL, NULL
 GO
