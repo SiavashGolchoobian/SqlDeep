@@ -5,7 +5,7 @@
   <DefaultSchema>dbo</DefaultSchema>
   <DefaultUser>dbo</DefaultUser>
   <DefaultFilegroup>PRIMARY</DefaultFilegroup>
-  <DatabaseVersion>15</DatabaseVersion>
+  <DatabaseVersion>16</DatabaseVersion>
   <CompatibilityLevel>1</CompatibilityLevel>
   <EngineEdition>Enterprise</EngineEdition>
   <IsAzure>False</IsAzure>
@@ -64,7 +64,7 @@
     <DataWriteAllFilesInOneDirectory>True</DataWriteAllFilesInOneDirectory>
   </WriteToFileOptions>
   <DataFileSet>
-    <Count>8</Count>
+    <Count>14</Count>
     <DataFile>maintenance.LinkedServers_Data.sql</DataFile>
     <DataFile>maintenance.Lookup_BackupTypes_Data.sql</DataFile>
     <DataFile>maintenance.Lookup_ExistenceCheck_Data.sql</DataFile>
@@ -73,5 +73,11 @@
     <DataFile>maintenance.Variables_Data.sql</DataFile>
     <DataFile>maintenance._CatalogOfFields_Data.sql</DataFile>
     <DataFile>maintenance._CatalogOfTables_Data.sql</DataFile>
+    <DataFile>maintenance.BackupCatalogs_Secondary_Data.sql</DataFile>
+    <DataFile>maintenance.TimeBaseScenarioRules_Data.sql</DataFile>
+    <DataFile>maintenance.FileBaseRequests_Data.sql</DataFile>
+    <DataFile>maintenance.BackupCatalogs_Primary_Data.sql</DataFile>
+    <DataFile>maintenance.TimeBaseScenarios_Data.sql</DataFile>
+    <DataFile>maintenance.BackupRequests_Data.sql</DataFile>
   </DataFileSet>
 </DatabaseInformation>
