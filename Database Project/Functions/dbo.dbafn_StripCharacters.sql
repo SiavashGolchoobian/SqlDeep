@@ -18,7 +18,7 @@ CREATE FUNCTION [dbo].[dbafn_StripCharacters]
     @MatchExpression VARCHAR(255)
 )
 RETURNS NVARCHAR(MAX)
-WITH SCHEMABINDING AS
+--WITH SCHEMABINDING AS
 BEGIN
 	/*
 	--Alphabetic only:

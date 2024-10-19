@@ -42,7 +42,7 @@ BEGIN
 	SET @myStatus_FAILED=N'FAILED'
 	SET @myStatus_INPROGRESS=N'INPROGRESS'
 	SET @myNewLine=CHAR(13)+CHAR(10)
-	
+/*	
 	--Phase 3: Execute downloaded commands from local repository
 	WHILE EXISTS (	SELECT 1 
 					FROM [dbo].[ScriptRepositoryGuest] AS myGuest 
@@ -151,6 +151,7 @@ BEGIN
 	END
 	
 	--Phase 4: Find Last applied version from repository and reset Database version with that value for preventing from incoorect database version because of replaced recordId's
+	*/
 END
 GO
 EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_scriptrepository_executeonguest', NULL, NULL
