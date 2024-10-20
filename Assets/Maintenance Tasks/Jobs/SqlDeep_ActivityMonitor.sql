@@ -1,31 +1,27 @@
 USE [msdb]
 GO
-
-/****** Object:  Job [SqlDeep_ActivityMonitor]    Script Date: 3/1/2021 8:47:27 AM ******/
 BEGIN TRANSACTION
 DECLARE @ReturnCode INT
 SELECT @ReturnCode = 0
-/****** Object:  JobCategory [SqlDeep Jobs]    Script Date: 3/1/2021 8:47:27 AM ******/
-IF NOT EXISTS (SELECT name FROM msdb.dbo.syscategories WHERE name=N'SqlDeep Jobs' AND category_class=1)
+IF NOT EXISTS (SELECT name FROM msdb.dbo.syscategories WHERE name=N'SqlDeep' AND category_class=1)
 BEGIN
-EXEC @ReturnCode = msdb.dbo.sp_add_category @class=N'JOB', @type=N'LOCAL', @name=N'SqlDeep Jobs'
-IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-
+	EXEC @ReturnCode = msdb.dbo.sp_add_category @class=N'JOB', @type=N'LOCAL', @name=N'SqlDeep'
+	IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
 END
 
 DECLARE @jobId BINARY(16)
-EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'SqlDeep_ActivityMonitor', 
-		@enabled=1, 
+EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'Local_SqlDeep_ActivityMonitor', 
+		@enabled=0, 
 		@notify_level_eventlog=0, 
 		@notify_level_email=0, 
 		@notify_level_netsend=0, 
 		@notify_level_page=0, 
 		@delete_level=0, 
 		@description=N'Capture session activities', 
-		@category_name=N'SqlDeep Jobs', 
+		@category_name=N'SqlDeep', 
 		@owner_login_name=N'sa', @job_id = @jobId OUTPUT
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
-/****** Object:  Step [Capture sessions]    Script Date: 3/1/2021 8:47:27 AM ******/
+
 EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Capture sessions', 
 		@step_id=1, 
 		@cmdexec_success_code=0, 
@@ -36,12 +32,14 @@ EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Capture 
 		@retry_attempts=0, 
 		@retry_interval=0, 
 		@os_run_priority=0, @subsystem=N'TSQL', 
-		@command=N'DECLARE @GrabTransactionsOver_Second INT
+		@command=N'
+DECLARE @GrabTransactionsOver_Second INT
 DECLARE @LogRetentionDays INT
 
-SET @GrabTransactionsOver_Second=30
-SET @LogRetentionDays=3
-EXECUTE [dbo].[dbasp_activity_monitor] @GrabTransactionsOver_Second,@LogRetentionDays', 
+SET @GrabTransactionsOver_Second=10
+SET @LogRetentionDays=5
+EXECUTE [dbo].[dbasp_activity_monitor] @GrabTransactionsOver_Second,@LogRetentionDays
+', 
 		@database_name=N'SqlDeep', 
 		@flags=0
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
@@ -69,4 +67,3 @@ QuitWithRollback:
     IF (@@TRANCOUNT > 0) ROLLBACK TRANSACTION
 EndSave:
 GO
-
