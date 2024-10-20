@@ -55,3 +55,11 @@ BEGIN
 	END
 END
 GO
+EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'repository', 'PROCEDURE', N'dbasp_execute_tsql', NULL, NULL
+GO
+EXEC sp_addextendedproperty N'Created Date', N'2024-10-20', 'SCHEMA', N'repository', 'PROCEDURE', N'dbasp_execute_tsql', NULL, NULL
+GO
+EXEC sp_addextendedproperty N'Modified Date', N'2024-10-20', 'SCHEMA', N'repository', 'PROCEDURE', N'dbasp_execute_tsql', NULL, NULL
+GO
+EXEC sp_addextendedproperty N'Version', N'3.0.0.0', 'SCHEMA', N'repository', 'PROCEDURE', N'dbasp_execute_tsql', NULL, NULL
+GO
