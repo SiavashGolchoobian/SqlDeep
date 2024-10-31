@@ -14,29 +14,28 @@ GO
 -- =============================================
 CREATE FUNCTION [dbo].[dbafn_split] 
 (	
-	-- Add the parameters for the function here
-	@delimiter nvarchar(4000) = N',', 
-	@array_string nvarchar(MAX)
+	@delimiter NVARCHAR(4000) = N',', 
+	@array_string NVARCHAR(MAX)
 )
-RETURNS TABLE 
+RETURNS @OutputList TABLE ([Position] BIGINT,[Parameter] NVARCHAR(MAX))
 AS
-RETURN 
-(
-    WITH Pieces(Position, [start], [stop]) AS (
+BEGIN
+    ;WITH Pieces([Position], [start], [stop]) AS (
       SELECT CAST(1 AS BIGINT), CAST(1 AS BIGINT), CAST(CHARINDEX(@delimiter, @array_string) AS BIGINT)
       UNION ALL
-      SELECT CAST(Position + 1 AS BIGINT), CAST([stop] + 1 AS BIGINT), CAST(CHARINDEX(@delimiter, @array_string, [stop] + 1) AS BIGINT)
+      SELECT CAST([Position] + 1 AS BIGINT), CAST([stop] + 1 AS BIGINT), CAST(CHARINDEX(@delimiter, @array_string, [stop] + 1) AS BIGINT)
       FROM Pieces
       WHERE [stop] > 0
     )
-    SELECT Position,
-      SUBSTRING(@array_string, [start], CASE WHEN [stop] > 0 THEN [stop]-[start] ELSE LEN(@array_string) END) AS Parameter
-    FROM Pieces
-)
+    INSERT INTO @OutputList ([Position],[Parameter])
+	SELECT 
+		[Position],
+		SUBSTRING(@array_string, [start], CASE WHEN [stop] > 0 THEN [stop]-[start] ELSE LEN(@array_string) END) AS Parameter
+    FROM Pieces 
+	OPTION (MAXRECURSION 0);
 
-
-GO
-GRANT SELECT ON  [dbo].[dbafn_split] TO [role_sqldeep_repo]
+	RETURN
+END
 GO
 EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'dbo', 'FUNCTION', N'dbafn_split', NULL, NULL
 GO

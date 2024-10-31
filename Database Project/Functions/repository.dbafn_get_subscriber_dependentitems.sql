@@ -29,10 +29,10 @@ RETURN
 				[myMetadata].[dependency].[value]('@version','nvarchar(50)') AS ItemVersion
 			FROM 
 				[repository].[Subscriber] AS mySubscriber WITH (READPAST)
-				CROSS APPLY [mySubscriber].[Metadata].nodes('/meatadata/DependentItems/Item') AS myMetadata([dependency])
+				CROSS APPLY [mySubscriber].[Metadata].nodes('/metadata/DependentItems/Item') AS myMetadata([dependency])
 			WHERE
 				[mySubscriber].[SubscriberItemId]=@SubscriberItemId
-				AND [mySubscriber].[Metadata].exist('/meatadata/DependentItems/Item')=1 
+				AND [mySubscriber].[Metadata].exist('/metadata/DependentItems/Item')=1 
 			) AS myDepndentItems
 			CROSS APPLY [repository].[dbafn_get_subscriber_item] ([myDepndentItems].[ItemName],[myDepndentItems].[ItemVersion],[myDepndentItems].[PublisherName]) AS myActualItems
 		UNION ALL
@@ -48,9 +48,9 @@ RETURN
 				[myMetadata].[dependency].[value]('@version','nvarchar(50)') AS ItemVersion
 			FROM 
 				myCte AS mySubscriber
-				CROSS APPLY [mySubscriber].[Metadata].nodes('/meatadata/DependentItems/Item') AS myMetadata([dependency])
+				CROSS APPLY [mySubscriber].[Metadata].nodes('/metadata/DependentItems/Item') AS myMetadata([dependency])
 			WHERE
-				[mySubscriber].[Metadata].exist('/meatadata/DependentItems/Item')=1 
+				[mySubscriber].[Metadata].exist('/metadata/DependentItems/Item')=1 
 			) AS myDepndentItems
 			CROSS APPLY [repository].[dbafn_get_subscriber_item] ([myDepndentItems].[ItemName],[myDepndentItems].[ItemVersion],[myDepndentItems].[PublisherName]) AS myActualItems
 	)
