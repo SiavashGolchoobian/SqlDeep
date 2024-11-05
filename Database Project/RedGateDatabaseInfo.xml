@@ -64,9 +64,18 @@
     <DataWriteAllFilesInOneDirectory>True</DataWriteAllFilesInOneDirectory>
   </WriteToFileOptions>
   <DataFileSet>
-    <Count>7</Count>
+    <Count>16</Count>
+    <DataFile>maintenance.BackupCatalogs_Primary_Data.sql</DataFile>
+    <DataFile>maintenance.BackupCatalogs_Secondary_Data.sql</DataFile>
+    <DataFile>maintenance.BackupRequests_Data.sql</DataFile>
+    <DataFile>maintenance.FileBaseRequests_Data.sql</DataFile>
     <DataFile>maintenance.LinkedServers_Data.sql</DataFile>
+    <DataFile>maintenance.Lookup_BackupTypes_Data.sql</DataFile>
+    <DataFile>maintenance.Lookup_ExistenceCheck_Data.sql</DataFile>
+    <DataFile>maintenance.Lookup_TransferSeries_Data.sql</DataFile>
     <DataFile>maintenance.Lookup_VariableSource_Data.sql</DataFile>
+    <DataFile>maintenance.TimeBaseScenarioRules_Data.sql</DataFile>
+    <DataFile>maintenance.TimeBaseScenarios_Data.sql</DataFile>
     <DataFile>maintenance.Variables_Data.sql</DataFile>
     <DataFile>maintenance._CatalogOfFields_Data.sql</DataFile>
     <DataFile>maintenance._CatalogOfTables_Data.sql</DataFile>

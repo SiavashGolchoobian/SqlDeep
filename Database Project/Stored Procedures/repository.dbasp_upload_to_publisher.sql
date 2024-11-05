@@ -16,7 +16,7 @@ CREATE PROCEDURE [repository].[dbasp_upload_to_publisher] (
 	@ItemName nvarchar(255),
 	@ItemType nvarchar(50),
 	@ItemVersion nvarchar(50),
-	@FilePath nvarchar(256),
+	@ItemContent varbinary(max),
 	@Tags nvarchar(4000),
 	@Description nvarchar(4000),
 	@IsEnabled bit=1,
@@ -27,13 +27,11 @@ CREATE PROCEDURE [repository].[dbasp_upload_to_publisher] (
 BEGIN
 	SET NOCOUNT ON
 	DECLARE @myLatestItemVersion nvarchar(50)
-	DECLARE @myStatement NVARCHAR(MAX)
-	DECLARE @myStatementParams NVARCHAR(255)
 	
 	SET @myLatestItemVersion =(SELECT TOP 1 [ItemVersion] FROM [repository].[Publisher] WHERE ItemName=@ItemName ORDER BY [ItemVersion] DESC)
 	IF @AllowGenerateMetadata=1
 	BEGIN
-		EXEC [repository].[dbasp_analyze_file_dependencies] @FilePath,@Metadata OUTPUT
+		EXEC [repository].[dbasp_analyze_file_dependencies] @ItemContent,@Metadata OUTPUT
 	END
 
 	IF @myLatestItemVersion IS NOT NULL AND @AllowToReplaceIfExist=1 AND @ItemVersion IS NULL
@@ -47,24 +45,20 @@ BEGIN
 
 	IF EXISTS (SELECT [ItemVersion] FROM [repository].[Publisher] WHERE ItemName=@ItemName AND [ItemVersion]=@ItemVersion)
 	BEGIN
-		SET @myStatementParams=N'@myItemName nvarchar(255),@myItemType nvarchar(50),@myItemVersion nvarchar(50),@myTags nvarchar(4000),@myDescription nvarchar(4000),@myIsEnabled bit,@myMetadata xml'
-		SET @myStatement=N'
 		UPDATE [repository].[Publisher] SET
-			   [ItemType]=ISNULL(@myItemType,[ItemType]),
-			   [ItemContent]=ISNULL( (SELECT [FileContent].* FROM OPENROWSET (BULK N''' + @FilePath + ''', SINGLE_BLOB) AS [FileContent]) , [ItemContent]),
-			   [Tags]=ISNULL(@myTags,[Tags]),
-			   [Description]=ISNULL(@myDescription,[Description]),
-			   [IsEnabled]=ISNULL(@myIsEnabled,[IsEnabled]),
-			   [Metadata]=ISNULL(@myMetadata,[Metadata])
+			   [ItemType]=ISNULL(@ItemType,[ItemType]),
+			   [ItemContent]=ISNULL(@ItemContent, [ItemContent]),
+			   [Tags]=ISNULL(@Tags,[Tags]),
+			   [Description]=ISNULL(@Description,[Description]),
+			   [IsEnabled]=ISNULL(@IsEnabled,[IsEnabled]),
+			   [Metadata]=ISNULL(@Metadata,[Metadata])
 		WHERE
-			   [ItemName]=@myItemName
-			   AND [ItemVersion]=@myItemVersion
-		'
+			   [ItemName]=@ItemName
+			   AND [ItemVersion]=@ItemVersion
 	END
 	ELSE
 	BEGIN
-		SET @myStatementParams=N'@myItemName nvarchar(255),@myItemType nvarchar(50),@myItemVersion nvarchar(50),@myTags nvarchar(4000),@myDescription nvarchar(4000),@myIsEnabled bit,@myMetadata xml'
-		SET @myStatement=N'
+		SET @Tags=ISNULL(@Tags,'TSX')
 		INSERT INTO [repository].[Publisher]
 			   ([ItemName]
 			   ,[ItemType]
@@ -77,21 +71,17 @@ BEGIN
 			   ,[IsEnabled]
 			   ,[Metadata])
 		 VALUES
-			   (@myItemName,
-			   @myItemType,
-			   @myItemVersion,
-			   (SELECT [FileContent].* FROM OPENROWSET (BULK N''' + @FilePath + ''', SINGLE_BLOB) AS [FileContent]),
-			   @myTags,
+			   (@ItemName,
+			   @ItemType,
+			   @ItemVersion,
+			   @ItemContent,
+			   @Tags,
 			   GETDATE(),
 			   GETDATE(),
-			   @myDescription,
-			   @myIsEnabled,
-			   @myMetadata)
-		'
+			   @Description,
+			   @IsEnabled,
+			   @Metadata)
 	END
-
-	Print @myStatement
-	EXECUTE sp_executesql @myStatement,@myStatementParams,@myItemName=@ItemName,@myItemType=@ItemType,@myItemVersion=@ItemVersion,@myTags=@Tags,@myDescription=@Description,@myIsEnabled=@IsEnabled,@myMetadata=@Metadata
 END
 GO
 EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'repository', 'PROCEDURE', N'dbasp_upload_to_publisher', NULL, NULL
