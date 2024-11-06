@@ -23,7 +23,7 @@ BEGIN
 	SET @myNewLine=CHAR(10)
 	SET @myMetadataContent = (
 		SELECT 
-			RIGHT(myTextLines.Parameter,CHARINDEX('\',REVERSE(myTextLines.Parameter),0)-1) AS 'name',
+			REPLACE(REPLACE(RIGHT(myTextLines.Parameter,CHARINDEX('\',REVERSE(myTextLines.Parameter),0)-1),CHAR(10),''),CHAR(13),'') AS 'name',
 			'' as 'version'
 		FROM
 			[dbo].[dbafn_split](@myNewLine,CAST(@Content AS VARCHAR(MAX)) ) AS myTextLines
