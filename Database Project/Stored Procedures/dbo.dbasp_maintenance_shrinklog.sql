@@ -189,8 +189,11 @@ BEGIN
 								BEGIN
 									SET @ShrinkToSizeMB = @ShrinkToSizePage * 8 / 1024
 									SET @Command='USE ' + QUOTENAME(@Database_Name) +'; '
-									SET @Command= @Command + 'CHECKPOINT;'
-									SET @Command= @Command + 'DBCC SHRINKFILE ('''+ CAST(@LogicalName as nvarchar(255)) + ''',' + CAST(@ShrinkToSizeMB as nvarchar(255)) + ');'
+									SET @Command= @Command + 'IF NOT EXISTS (SELECT 1 FROM [sys].[dm_exec_requests] AS myRequest WHERE UPPER([myRequest].[Command])=UPPER(''BACKUP DATABASE'') AND [myRequest].[database_id]=DB_ID('''+@Database_Name+'''))'
+									SET @Command= @Command + 'BEGIN'
+									SET @Command= @Command + '	CHECKPOINT;'
+									SET @Command= @Command + '	DBCC SHRINKFILE ('''+ CAST(@LogicalName as nvarchar(255)) + ''',' + CAST(@ShrinkToSizeMB as nvarchar(255)) + ');'
+									SET @Command= @Command + 'END'
 									Print @Command
 									--==============Start of Shrinking log
 									BEGIN TRY
