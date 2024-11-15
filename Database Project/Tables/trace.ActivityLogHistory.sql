@@ -47,7 +47,7 @@ CREATE TABLE [trace].[ActivityLogHistory]
 [LogTime] [datetime] NULL CONSTRAINT [DF_ActivityLogHistory_LogTime] DEFAULT (getdate())
 ) ON [Data_OLTP]
 GO
-ALTER TABLE [trace].[ActivityLogHistory] ADD CONSTRAINT [PK__Activity__FBDF78E9BC278F45] PRIMARY KEY CLUSTERED  ([RecordId]) WITH (FILLFACTOR=90, PAD_INDEX=ON) ON [Data_OLTP]
+ALTER TABLE [trace].[ActivityLogHistory] ADD CONSTRAINT [PK_trace_ActivityLogHistory] PRIMARY KEY CLUSTERED ([RecordId]) WITH (FILLFACTOR=90, PAD_INDEX=ON) ON [Data_OLTP]
 GO
 CREATE NONCLUSTERED INDEX [NCIX_RequestStartTime] ON [trace].[ActivityLogHistory] ([RequestStartTime]) WITH (FILLFACTOR=90, PAD_INDEX=ON) ON [Index_All]
 GO

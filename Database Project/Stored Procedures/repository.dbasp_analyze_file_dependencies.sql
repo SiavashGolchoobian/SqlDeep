@@ -35,4 +35,13 @@ BEGIN
 	SET @Metadata.modify('insert sql:variable("@myMetadataContent") into (/metadata)[1]')
 END
 
+
+GO
+EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'repository', 'PROCEDURE', N'dbasp_analyze_file_dependencies', NULL, NULL
+GO
+EXEC sp_addextendedproperty N'Created Date', N'2023-10-30', 'SCHEMA', N'repository', 'PROCEDURE', N'dbasp_analyze_file_dependencies', NULL, NULL
+GO
+EXEC sp_addextendedproperty N'Modified Date', N'2023-10-30', 'SCHEMA', N'repository', 'PROCEDURE', N'dbasp_analyze_file_dependencies', NULL, NULL
+GO
+EXEC sp_addextendedproperty N'Version', N'3.0.0.1', 'SCHEMA', N'repository', 'PROCEDURE', N'dbasp_analyze_file_dependencies', NULL, NULL
 GO

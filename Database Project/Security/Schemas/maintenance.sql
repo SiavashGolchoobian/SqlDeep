@@ -1,3 +1,3 @@
 CREATE SCHEMA [maintenance]
-AUTHORIZATION [db_owner]
+AUTHORIZATION [dbo]
 GO

@@ -1,9 +1,13 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
 -- Stored Procedure
 
 -- =============================================
 -- Author:		<Golchoobian>
 -- Create date: <03/13/2017>
--- Version:		<3.0.0.0>
+-- Version:		<3.0.0.1>
 -- Description:	<Send or Save messages as alerts>
 -- Input Parameters:
 --	@AlertType:				'...'	//Any custom message as subject or category
@@ -111,5 +115,5 @@ EXEC sp_addextendedproperty N'Created Date', N'2017-03-13', 'SCHEMA', N'dbo', 'P
 GO
 EXEC sp_addextendedproperty N'Modified Date', N'2017-03-13', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_alert_event', NULL, NULL
 GO
-EXEC sp_addextendedproperty N'Version', N'3.0.0.0', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_alert_event', NULL, NULL
+EXEC sp_addextendedproperty N'Version', N'3.0.0.1', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_alert_event', NULL, NULL
 GO

@@ -15,5 +15,13 @@ CREATE TABLE [trace].[VfLogHistory]
 [LogTime] [datetime] NOT NULL
 ) ON [Data_OLTP]
 GO
-ALTER TABLE [trace].[VfLogHistory] ADD CONSTRAINT [PK_VfLogHistory] PRIMARY KEY CLUSTERED  ([RecordId]) WITH (FILLFACTOR=90, PAD_INDEX=ON) ON [Data_OLTP]
+ALTER TABLE [trace].[VfLogHistory] ADD CONSTRAINT [PK_VfLogHistory] PRIMARY KEY CLUSTERED ([RecordId]) WITH (FILLFACTOR=90, PAD_INDEX=ON) ON [Data_OLTP]
+GO
+EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'trace', 'TABLE', N'VfLogHistory', NULL, NULL
+GO
+EXEC sp_addextendedproperty N'Created Date', N'2014-06-25', 'SCHEMA', N'trace', 'TABLE', N'VfLogHistory', NULL, NULL
+GO
+EXEC sp_addextendedproperty N'Modified Date', N'2017-03-08', 'SCHEMA', N'trace', 'TABLE', N'VfLogHistory', NULL, NULL
+GO
+EXEC sp_addextendedproperty N'Version', N'3.0.0.0', 'SCHEMA', N'trace', 'TABLE', N'VfLogHistory', NULL, NULL
 GO

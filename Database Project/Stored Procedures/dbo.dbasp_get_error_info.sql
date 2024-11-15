@@ -1,4 +1,7 @@
--- Stored Procedure
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
 
 -- =============================================
 -- Author:		<Golchoobian>
