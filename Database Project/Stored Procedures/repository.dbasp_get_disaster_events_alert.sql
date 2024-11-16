@@ -68,7 +68,7 @@ BEGIN
 					(
 						SELECT [myError].Id,
 							   CAST([myError].[LogDate] AS SMALLDATETIME) AS [LogDate],
-							   TRIM(SUBSTRING(
+							   LTRIM(RTRIM(SUBSTRING(
 												 [myError].[Text],
 												 PATINDEX('%:%', [myError].[Text]) + 1,
 												 ((PATINDEX('%,%', [myError].[Text]) - PATINDEX('%:%', [myError].[Text])
@@ -76,7 +76,7 @@ BEGIN
 												  )
 												 )
 											 )
-								   ) AS [DatabaseName],
+								   )) AS [DatabaseName],
 							   SUBSTRING(
 											[myError].[Text],
 											PATINDEX('%{%', [myError].[Text]),

@@ -48,8 +48,8 @@ BEGIN
 		@myNewLine+ N'	AND [myDepend].[referenced_class]=1'+
 		@myNewLine+ N'	AND [myDepend].[referencing_minor_id]=0'+
 		@myNewLine+ N'	AND [myDepend].[referenced_minor_id]=0'+
-		@myNewLine+ N'	AND PATINDEX(''%[[]'' + TRIM(CAST([myReferencingObject].[type] AS NVARCHAR(5))) + '']%'',@myTargetObjects)>0'+
-		@myNewLine+ N'	AND PATINDEX(''%[[]'' + TRIM(CAST([myReferencedObject].[type]  AS NVARCHAR(5))) + '']%'',@myTargetObjects)>0'+
+		@myNewLine+ N'	AND PATINDEX(''%[[]'' + LTRIM(RTRIM(CAST([myReferencingObject].[type] AS NVARCHAR(5)))) + '']%'',@myTargetObjects)>0'+
+		@myNewLine+ N'	AND PATINDEX(''%[[]'' + LTRIM(RTRIM(CAST([myReferencedObject].[type]  AS NVARCHAR(5)))) + '']%'',@myTargetObjects)>0'+
 		@myNewLine+ N''+
 		@myNewLine+ N'INSERT INTO @myResultList ([ObjectId], [ObjectName], [ObjectType], [DependencyLevel], [DependentObjects])'+
 		@myNewLine+ N'SELECT '+
@@ -64,7 +64,7 @@ BEGIN
 		@myNewLine+ N'	LEFT OUTER JOIN @myDependentList AS myValidDependentList ON [myObjects].[object_id]=[myValidDependentList].[ReferencingId]'+
 		@myNewLine+ N'WHERE'+
 		@myNewLine+ N'	[myObjects].[is_ms_shipped]=0'+
-		@myNewLine+ N'	AND PATINDEX(''%[[]'' + TRIM(CAST([myObjects].[type] AS NVARCHAR(5))) + '']%'',@myTargetObjects)>0'+
+		@myNewLine+ N'	AND PATINDEX(''%[[]'' + LTRIM(RTRIM(CAST([myObjects].[type] AS NVARCHAR(5)))) + '']%'',@myTargetObjects)>0'+
 		@myNewLine+ N'	AND [myValidDependentList].[ReferencingId] IS NULL'+
 		@myNewLine+ N''+
 		@myNewLine+ N'INSERT INTO @myResultList ([ObjectId], [ObjectName], [ObjectType], [DependencyLevel], [DependentObjects])'+

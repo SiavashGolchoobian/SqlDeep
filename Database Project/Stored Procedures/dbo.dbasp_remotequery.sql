@@ -23,7 +23,7 @@ BEGIN
     DECLARE @myStatement AS NVARCHAR (4000);
     SET @myStatement = CAST (N'' AS NVARCHAR (4000));
     SET @myErrorCount = 0;
-    SET @LinkedServerName = TRIM(REPLACE(REPLACE(@LinkedServerName, '[', ''), ']', ''));
+    SET @LinkedServerName = LTRIM(RTRIM(REPLACE(REPLACE(@LinkedServerName, '[', ''), ']', '')));
     SET @Query = REPLACE(@Query, '''', '''''');
 
     IF NOT EXISTS (SELECT 1
