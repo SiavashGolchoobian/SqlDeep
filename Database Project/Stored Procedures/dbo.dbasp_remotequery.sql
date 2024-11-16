@@ -42,7 +42,7 @@ BEGIN
                                      WHERE  [name] = @LinkedServerName);
         END
 
-    IF @Query IS NULL OR LEN(TRIM(@Query))=0
+    IF @Query IS NULL OR LEN(LTRIM(RTRIM(@Query)))=0
         BEGIN
             SET @myErrorCount += 1;
             SET @myErrorMessage = '@Query is empty.';
