@@ -105,6 +105,9 @@ BEGIN
 	
 	DROP TABLE #myErrorLogInfo
 END
+
+GO
+GRANT EXECUTE ON  [repository].[dbasp_get_disaster_events_alert] TO [role_disaster]
 GO
 EXEC sp_addextendedproperty N'Author', N'Fatemeh Moniri', 'SCHEMA', N'repository', 'PROCEDURE', N'dbasp_get_disaster_events_alert', NULL, NULL
 GO
