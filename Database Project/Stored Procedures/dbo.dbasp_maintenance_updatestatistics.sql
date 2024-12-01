@@ -1,6 +1,9 @@
-SET QUOTED_IDENTIFIER ON
+USE [SqlDeep]
 GO
+/****** Object:  StoredProcedure [dbo].[dbasp_maintenance_updatestatistics]    Script Date: 12/1/2024 3:19:11 PM ******/
 SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
 GO
 
 
@@ -15,8 +18,11 @@ GO
 --	@FilterTables:	'<ALL_TABLES>'or FQDN table name like '[myDB1].[mySchema1].[myTable1],[myDB2].[mySchema2].[myTable2]'
 --	@IgnoreStatsUpdatedInLastXHours:	Ignore updating stats if last update is for last @IgnoreStatsUpdatedInLastXHours hours
 --	@UnusedStatTresholdInDays:			Ignore updating stats if last update of that index is latest than @UnusedStatTresholdInDays days
+-- Modify by : <maziyarmaranaki>
+-- ModifyDate : <2024-10-25>
+-- Deccription : Excluded InmemoryTables 
 -- =============================================
-CREATE PROCEDURE [dbo].[dbasp_maintenance_updatestatistics]
+ALTER PROCEDURE [dbo].[dbasp_maintenance_updatestatistics]
 	@DatabaseNames NVARCHAR(MAX) = N'<ALL_USER_DATABASES>',
 	@FilterTables NVARCHAR(MAX) = N'<ALL_TABLES>',
 	@IgnoreStatsUpdatedInLastXHours INT = 6,
@@ -100,8 +106,12 @@ BEGIN
 				@myNewLine + N'		[myObjects].[is_ms_shipped]=0																				-- Only application indexes'+
 				@myNewLine + N'		AND ([myStatProperties].[rows]>100 /*OR [myStatProperties].[rows] IS NULL*/)								-- Only indexes with at least 100 rows'+
 				@myNewLine + N'		AND ([myStatProperties].[modification_counter]>0 /*OR [myStatProperties].[modification_counter] IS NULL*/)	-- Only indexes with changed data'+
+				@myNewLine +'And not exists (Select 1
+						From sys.memory_optimized_tables_internal_attributes mo 
+						Where mo.object_id = myObjects.object_id)'+
+						
 				CASE WHEN UPPER(@myTablesFilter) <> '<ALL_TABLES>' THEN
-					@myNewLine + N'		AND (QUOTENAME(DB_NAME())+''.''+QUOTENAME([mySchema].[name])+''.''+QUOTENAME([myObjects].[name]) IN ('+CAST(@myTablesFilter AS NVARCHAR(MAX))+'))	-- Only Specified Tables are selected'
+					@myNewLine + N'		AND (QUOTENAME(DB_NAME())+''.''+QUOTENAME([mySchema].[name])+''.''+QUOTENAME([myObjects].[name]) IN ('+CAST(@myTablesFilter AS NVARCHAR(MAX))+')) -- Only Specified Tables are selected'
 				ELSE CAST(N'' AS NVARCHAR(MAX)) END +
 				@myNewLine + N'	) AS myStatData'+
 				@myNewLine + N'WHERE'+
@@ -147,6 +157,7 @@ BEGIN
 			--==========Start to Update
 			BEGIN TRY
 				EXECUTE (@mySQLScript);
+				
 			END TRY
 			BEGIN CATCH
 				DECLARE @CustomMessage nvarchar(255)
@@ -161,12 +172,3 @@ BEGIN
 	CLOSE @myCursor;
 	DEALLOCATE @myCursor;
 END
-GO
-EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_updatestatistics', NULL, NULL
-GO
-EXEC sp_addextendedproperty N'Created Date', N'2015-01-21', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_updatestatistics', NULL, NULL
-GO
-EXEC sp_addextendedproperty N'Modified Date', N'2023-04-23', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_updatestatistics', NULL, NULL
-GO
-EXEC sp_addextendedproperty N'Version', N'3.0.1.1', 'SCHEMA', N'dbo', 'PROCEDURE', N'dbasp_maintenance_updatestatistics', NULL, NULL
-GO
