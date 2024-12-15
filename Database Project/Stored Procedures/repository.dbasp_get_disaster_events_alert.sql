@@ -4,6 +4,7 @@ SET ANSI_NULLS ON
 GO
 
 
+
 -- =============================================
 -- Author:		Fatemeh Moniri
 -- Create date: 2024-08-11
@@ -16,10 +17,13 @@ BEGIN
 	DECLARE @myCounter INT;
 	DECLARE @myDate AS DATETIME;
 	DECLARE @myMinDate AS DATE;
+	DECLARE @myPattern NVARCHAR(8)
 	--DECLARE @myAcceptedLatencyHour INT = -2;
 	SET @myDate = GETDATE();
 	SET @myCounter = 0;
 	SET @myMinDate = GETDATE();
+	SET @myPattern = '%' + N'_'+CAST(FORMAT(@myDate,'yyyy','fa') AS NVARCHAR(4))+N'_'+ '%'
+
 	CREATE TABLE #myErrorLogInfo
 	(
 		[Id] INT IDENTITY PRIMARY KEY NOT NULL,
@@ -36,6 +40,9 @@ BEGIN
 		FROM #myErrorLogInfo;
 		SET @myCounter = @myCounter + 1;
 	END;
+
+	
+DELETE  FROM #myErrorLogInfo  WHERE  [Processinfo] NOT LIKE N'Backup' OR [text] NOT LIKE 'Log was restored.%';
 
 	SELECT
 		@@SERVERNAME As [EventSource], 'DisasterLatencies'AS [Module], @myDate AS [EventTimeStamp], 'WRN' AS [Serverity] , CONCAT('Number of unsynced databases are: ',COUNT(1))  AS [Description],
@@ -82,12 +89,10 @@ BEGIN
 											PATINDEX('%{%', [myError].[Text]),
 											((PATINDEX('%}%', [myError].[Text]) - PATINDEX('%{%', [myError].[Text])))
 										) AS [RestorAddress],
-							   SUBSTRING([myError].[Text], PATINDEX('%_1403_%', [myError].[Text]) + 1, (10)) AS [RestorDate]
+								SUBSTRING([myError].[Text] ,PATINDEX(@myPattern,[myError].[TEXT])+1,(10)) As [RestorDate]
 						FROM #myErrorLogInfo AS myError
 						WHERE [myError].[LogDate]
 							  BETWEEN DATEADD(DAY, -2, @myDate) AND @myDate
-							  AND [myError].[Processinfo] = 'BACKUP'
-							  AND [myError].[Text] LIKE 'LOG was restored.%'
 					) AS myErrorLogData
 					WHERE LEN([myErrorLogData].[DatabaseName]) <> 0
 				) AS myResult
@@ -105,7 +110,6 @@ BEGIN
 	
 	DROP TABLE #myErrorLogInfo
 END
-
 GO
 GRANT EXECUTE ON  [repository].[dbasp_get_disaster_events_alert] TO [role_disaster]
 GO
