@@ -1,8 +1,10 @@
-SET QUOTED_IDENTIFIER ON
+USE [SqlDeep]
 GO
+/****** Object:  UserDefinedFunction [dbo].[dbafn_database_list]    Script Date: 12/1/2024 3:20:45 PM ******/
 SET ANSI_NULLS ON
 GO
-
+SET QUOTED_IDENTIFIER ON
+GO
 
 -- =============================================
 -- Author:		<Golchoobian>
@@ -17,8 +19,11 @@ GO
 --	@ExcludeSnapshots:		Exclude snapshot db's from returned list
 --	@ExcludeReadonly:		Exclude read-only db's from returned list
 --	@ExcludeAoagReplicas:	Exclude AOAG Replica db's from returned list
+-- Modify By : <MaziyarMaranaki>
+--ModifyDate :<2024-10-26>
+--Description : <Add HA Status For fetch Only Replica Databases>
 -- =============================================
-CREATE FUNCTION [dbo].[dbafn_database_list] (
+ALTER FUNCTION [dbo].[dbafn_database_list] (
 	@DatabaseNames NVARCHAR(MAX) = N'<ALL_USER_DATABASES>'
 	,@Validate BIT=1
 	,@ExcludeTempdb BIT=1
@@ -47,7 +52,16 @@ BEGIN
 		SET @ListIsGenerated=1
 		INSERT INTO @DatabaseList ([Name]) SELECT CAST([name] as nvarchar(255)) FROM sys.databases WHERE database_id>4 and state <> 6	--Is in normal mode
 	END
-	
+	--Phase 10: fetch HA DB 
+	IF UPPER(@DatabaseNames) LIKE UPPER(N'<HA>')
+	BEGIN
+		SET @ListIsGenerated=1
+		INSERT INTO @DatabaseList ([Name]) 
+		SELECT CAST([myDatabases].[name] collate arabic_ci_as as nvarchar(255)) 
+		FROM [sys].[databases] AS myDatabases 
+		INNER JOIN [sys].[dm_hadr_availability_replica_states] AS myReplicaStatus 
+		ON [myReplicaStatus].[replica_id] = [myDatabases].[replica_id]--Is in normal mode
+	END
 	IF UPPER(@DatabaseNames) LIKE UPPER(N'<ALL_SYSTEM_DATABASES>%')
 	BEGIN
 		SET @ListIsGenerated=1
@@ -125,16 +139,7 @@ BEGIN
 		DELETE FROM	@DatabaseList WHERE [Name] in (select CAST(myDbs.[name] collate arabic_ci_as as nvarchar(255)) from sys.databases as myDbs WHERE myDbs.is_read_only=1)
 				
 	--Remove Secondary AOAG Replica dbs
-	IF @ExcludeAoagReplicas=1 AND @ProductVersionNumber>10
+	IF @ExcludeAoagReplicas=1 AND @ProductVersionNumber>10 and @ListIsGenerated = 0
 		DELETE FROM	@DatabaseList WHERE [Name] in (SELECT CAST([myDatabases].[name] collate arabic_ci_as as nvarchar(255)) FROM [sys].[databases] AS myDatabases INNER JOIN [sys].[dm_hadr_availability_replica_states] AS myReplicaStatus ON [myReplicaStatus].[replica_id] = [myDatabases].[replica_id] WHERE [myReplicaStatus].[role]=2)
 	RETURN 
 END
-GO
-EXEC sp_addextendedproperty N'Author', N'Siavash Golchoobian', 'SCHEMA', N'dbo', 'FUNCTION', N'dbafn_database_list', NULL, NULL
-GO
-EXEC sp_addextendedproperty N'Created Date', N'2015-02-04', 'SCHEMA', N'dbo', 'FUNCTION', N'dbafn_database_list', NULL, NULL
-GO
-EXEC sp_addextendedproperty N'Modified Date', N'2023-09-11', 'SCHEMA', N'dbo', 'FUNCTION', N'dbafn_database_list', NULL, NULL
-GO
-EXEC sp_addextendedproperty N'Version', N'3.0.0.1', 'SCHEMA', N'dbo', 'FUNCTION', N'dbafn_database_list', NULL, NULL
-GO
