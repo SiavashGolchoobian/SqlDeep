@@ -63,9 +63,26 @@ EXECUTE [dbo].[dbasp_maintenance_take_backup]
 		@database_name=N'SqlDeep', 
 		@flags=0
 IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
+/****** Object:  Step [PurgeMsdbHistory]    Script Date: 11/12/1404 10:22:45 ق.ظ ******/
+EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'PurgeMsdbHistory', 
+		@step_id=2, 
+		@cmdexec_success_code=0, 
+		@on_success_action=3, 
+		@on_success_step_id=0, 
+		@on_fail_action=3, 
+		@on_fail_step_id=0, 
+		@retry_attempts=0, 
+		@retry_interval=0, 
+		@os_run_priority=0, @subsystem=N'TSQL', 
+		@command=N'DECLARE @myOldestDate AS DATETIME
+SET @myOldestDate=DATEADD(YEAR,-1,CAST(GETDATE() AS DATE))
+EXEC msdb.dbo.sp_delete_backuphistory @myOldestDate', 
+		@database_name=N'msdb', 
+		@flags=0
+IF (@@ERROR <> 0 OR @ReturnCode <> 0) GOTO QuitWithRollback
 /****** Object:  Step [Delete old backups]    Script Date: 3/1/2021 8:48:11 AM ******/
 EXEC @ReturnCode = msdb.dbo.sp_add_jobstep @job_id=@jobId, @step_name=N'Delete old backups', 
-		@step_id=2, 
+		@step_id=3, 
 		@cmdexec_success_code=0, 
 		@on_success_action=1, 
 		@on_success_step_id=0, 

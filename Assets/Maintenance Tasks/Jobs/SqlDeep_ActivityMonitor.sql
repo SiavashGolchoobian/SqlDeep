@@ -10,7 +10,7 @@ BEGIN
 END
 
 DECLARE @jobId BINARY(16)
-EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'Local_SqlDeep_ActivityMonitor', 
+EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'SqlDeep_ActivityMonitor', 
 		@enabled=0, 
 		@notify_level_eventlog=0, 
 		@notify_level_email=0, 
