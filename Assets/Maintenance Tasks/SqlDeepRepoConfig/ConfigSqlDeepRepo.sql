@@ -28,7 +28,7 @@ GO
 ------------------------------------- STEP 04:Create a Linked Server on all MSX and TSX servers
 USE [master]
 GO
-EXEC master.dbo.sp_addlinkedserver @server = N'SqlDeepRepo', @srvproduct=N'', @provider=N'SQLNCLI', @datasrc=N'DB-MN-DLV01.SQLDEEP.LOCAL\NODE,49149', @provstr=N'Encrypt=yes;', @catalog=N'SqlDeep'
+EXEC master.dbo.sp_addlinkedserver @server = N'SqlDeepRepo', @srvproduct=N'', @provider=N'SQLNCLI', @datasrc=N'DB-MN-DLV01.SQLDEEP.LOCAL\NODE,49149', @provstr=N'Encrypt=yes;TrustServerCertificate=yes', @catalog=N'SqlDeep'
  EXEC master.dbo.sp_addlinkedsrvlogin @rmtsrvname=N'SqlDeepRepo',@useself=N'False',@locallogin=N'SQLDEEP\SQL_AgentGMSA$',@rmtuser=N'AppCred_SqlDeepRepo',@rmtpassword='P@$$W0rd'
 GO
 EXEC master.dbo.sp_serveroption @server=N'SqlDeepRepo', @optname=N'collation compatible', @optvalue=N'false'
@@ -70,7 +70,7 @@ BEGIN
 END
 
 DECLARE @jobId BINARY(16)
-EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'Local_SqlDeep_ScriptRepositoryUpdate', 
+EXEC @ReturnCode =  msdb.dbo.sp_add_job @job_name=N'SqlDeep_ScriptRepositoryUpdate_Local', 
 		@enabled=1, 
 		@notify_level_eventlog=0, 
 		@notify_level_email=0, 
